@@ -19,16 +19,18 @@ class ScheduleApiView(APIView):
         client_name = request.query_params.get('client', None)
         
         # Извлекаем дату из заголовков
-        request_date_str = request.headers.get('Date', None)  # Формат YYYY-MM-DD
+        request_date_str = request.headers.get('X-CLIENT-TIME', None)  # Формат 2024-10-23T12:50:16.999Z
         
         if request_date_str:
             try:
-                # Преобразуем строку в объект даты
-                request_date = datetime.strptime(request_date_str, '%Y-%m-%d').date()
-            except ValueError:
-                return Response({'error': 'Неправильный формат даты. Используйте YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+                # Пытается парсить дату из стринга
+                request_date = datetime.fromisoformat(request_date_str).date()
+            except:
+                # В случае ощибки берет дату сервера
+                request_date =datetime.today().date()
         else:
-            return Response({'error': 'Дата не указана в заголовках'}, status=status.HTTP_400_BAD_REQUEST)
+            # Если дата не указана, используем дату сервера
+            request_date = datetime.today().date()
         
         try:
             # Находим клиента по имени
