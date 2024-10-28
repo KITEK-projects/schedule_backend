@@ -1,0 +1,133 @@
+openapi: 3.0.3
+info:
+  title: API для backend'а ScheduleApp спецификация
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api/v1/
+    description: Dev server
+paths:
+  /schedule:
+    get:
+      summary: Метод получения текущего расписания
+      tags:
+        - Schedule
+      parameters:
+        - name: client
+          in: query
+          required: true
+          description: Имя клиента, для которого нужно получить расписание
+          schema:
+            type: string
+            example: ОО-31
+      responses:
+        '200':
+          description: Успешный ответ с расписанием
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Schedule"
+        '400':
+          description: Клиент не найден либо не указан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Клиент не найден
+        '404':
+          description: Расписание не найдено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: У вас нет расписания
+  /clients:
+    get:
+      summary: Метод получения клиентов с фильтрацией по is_teacher
+      tags:
+        - Clients
+      operationId: getClients
+      parameters:
+        - name: is_teacher
+          in: query
+          required: true
+          description: Фильтр по типу клиента (0 - не учитель, 1 - учитель)
+          schema:
+            type: integer
+            enum: [0, 1]
+            example: 1
+      responses:
+        '200':
+          description: Успешный ответ с данными клиентов
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Clients"
+        '400':
+          description: Ошибка в параметре запроса
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Параметр is_teacher должен быть 0 или 1 или Обязательный параметр is_teacher не передан
+  
+components:
+  schemas:
+    Schedule:
+      type: object
+      required:
+        - client
+        - schedule
+      properties:
+        client:
+          type: string
+          example: ОО-31
+        schedule:
+          type: array
+          items:
+            type: object
+            properties:
+              schedule_date:
+                type: string
+                example: 2021-10-12
+              classes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    time_bells:
+                      type: string
+                      example: 13:45 15:05
+                      description: Может иметь 4 времени
+                    class_number:
+                      type: number
+                      example: 4
+                    title:
+                      type: string
+                      example: организация и технология производства продукции оп.
+                    class_type:
+                      type: string
+                      example: модуль 1
+                    partner: 
+                      type: string
+                      example: Коптева Л. С.
+                    location:
+                      type: string
+                      example: 12
+    Clients:
+      type: array
+      items:
+        type: string
+        example: Маслова Н. А.
+                 
+                      
+                    
+                
