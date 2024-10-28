@@ -49,8 +49,6 @@ class ScheduleApiView(APIView):
                     data['schedule'].append({
                         'schedule_date': schedule.schedule_date,
                         'classes': [{
-                            'is_lunch': c.is_lunch,
-                            'time_bells': c.time_bells,
                             'class_number': c.class_number,
                             'title': c.title,
                             'class_type': c.class_type,

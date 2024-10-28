@@ -4,7 +4,7 @@ from .models import *
 class ClassesSerializer(serializers.ModelSerializer):
     class Meta:
         model = classes
-        fields = ['class_number', 'is_lunch', 'time_bells', 'title', 'class_type', 'partner', 'location']
+        fields = ['class_number', 'title', 'class_type', 'partner', 'location']
 
 
 class SchedulesSerializer(serializers.ModelSerializer):

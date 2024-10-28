@@ -42,8 +42,6 @@ def create_tables():
                 CREATE TABLE IF NOT EXISTS classes (
                     id SERIAL PRIMARY KEY,
                     schedule_id INTEGER REFERENCES schedules(id),
-                    is_lunch BOOLEAN,
-                    time_bells VARCHAR(50),
                     class_number INTEGER NOT NULL,
                     title VARCHAR(255),
                     class_type VARCHAR(50),
@@ -142,8 +140,6 @@ def insert_data(data):
                     # Вставка классов для расписания
                     for class_item in schedule["classes"]:
                         class_number = class_item["number"]
-                        is_lunch = class_item['is_lunch']
-                        time_bells = class_item["time"]
                         title = class_item["title"]
                         class_type = class_item["type"]
                         partner = class_item["partner"]
@@ -151,16 +147,14 @@ def insert_data(data):
 
                         cursor.execute(
                             """
-                            INSERT INTO classes (schedule_id, class_number, is_lunch, time_bells, title, class_type, partner, location)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                            INSERT INTO classes (schedule_id, class_number, title, class_type, partner, location)
+                            VALUES (%s, %s, %s, %s, %s, %s)
                             ON CONFLICT (schedule_id, class_number) 
                             DO UPDATE SET title = EXCLUDED.title, class_type = EXCLUDED.class_type, partner = EXCLUDED.partner, location = EXCLUDED.location;
                             """,
                             (
                                 schedule_id,
                                 class_number,
-                                is_lunch,
-                                time_bells,
                                 title,
                                 class_type,
                                 partner,

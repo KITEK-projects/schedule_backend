@@ -2,83 +2,8 @@ import json
 from datetime import datetime
 from bs4 import BeautifulSoup
 
+
 data = []
-
-time_bell = {
-    'monday_first': [
-        '08:45 10:05',
-        [
-            '10:55 11:35',
-            '11:35 12:10',
-            '12:10 12:50',    
-        ],
-        '13:00 14:20',
-        '14:30 15:50',
-        '16:00 17:20',
-        '17:30 18:50'
-    ],
-    'monday_second': [
-        '08:45 10:05',
-        [
-          '10:55 12:15',
-          '12:15 13:00'  
-        ],
-        '13:00 14:20',
-        '14:30 15:50',
-        '16:00 17:20',
-        '17:30 18:50'
-    ],
-    'other_first': [
-        '08:45 10:05',
-        [
-            '10:15 10:55',
-            '10:55 12:25',
-            '12:25 12:05',    
-        ],
-        '12:15 13:35',
-        '13:45 15:05',
-        '15:15 16:35',
-        '16:45 18:05'
-    ],
-    'other_second': [
-        '08:45 10:05',
-        [
-          '10:15 11:35',
-          '11:35 12:12'  
-        ],
-        '12:15 13:35',
-        '13:45 15:05',
-        '15:15 16:35',
-        '16:45 18:05'
-    ]
-}
-
-def change_time(client, number, date):
-    course = int(client[-2])
-    # Есдт Понедельник
-    if datetime.strptime(date, "%Y-%m-%d").weekday() == 0:
-        if course <= 2:
-            return time_bell['monday_first'][number - 1]
-        elif course > 2: 
-            return time_bell['monday_second'][number - 1]
-    else:
-        if course <= 2:
-            return time_bell['other_first'][number - 1]
-        elif course > 2: 
-            return time_bell['other_second'][number - 1]
-        
-        
-def add_to_data(class_info, date):
-    schedule = []
-    if schedule and schedule[-1]['date'] == date:
-        schedule[-1]['classes'].append(class_info)
-    else:
-        schedule.append({
-            'date': date,
-            'classes': [class_info]
-        })
-    
-    return schedule
 
 
 def create_teachers(data):
@@ -91,8 +16,6 @@ def create_teachers(data):
             date = schedule['date']
             for classes in schedule['classes']:
                 number = classes['number']
-                is_lunch = classes['is_lunch']
-                time = classes['time']
                 title = classes['title']
                 type_ = classes['type']
                 partner = classes['partner']
@@ -111,8 +34,6 @@ def create_teachers(data):
                         # Добавляем класс в существующее расписание
                         schedule_item['classes'].append({
                             'number': number,
-                            'is_lunch': is_lunch,
-                            'time': time,
                             'title': title,
                             'type': type_,
                             'partner': client,
@@ -124,8 +45,6 @@ def create_teachers(data):
                             'date': date,
                             'classes': [{
                                 'number': number,
-                                'is_lunch': is_lunch,
-                                'time': time,
                                 'title': title,
                                 'type': type_,
                                 'partner': client,
@@ -141,8 +60,6 @@ def create_teachers(data):
                             'date': date,
                             'classes': [{
                                 'number': number,
-                                'is_lunch': is_lunch,
-                                'time': time,
                                 'title': title,
                                 'type': type_,
                                 'partner': client,
@@ -209,91 +126,22 @@ def html_parse(path):
             
             for i in tds_info:
                 if i[0] != "":
-                    if number == 2:
-                        if int(client_name[-2]) <= 2:
-                            times = change_time(client_name, number, date)
-                            class_info0= {
-                                'number': number,
-                                'is_lunch': False,
-                                'time': times[0],
-                                'title': i[0],
-                                'type': i[1].strip('()'),
-                                'partner': i[2],
-                                'location': location
-                            }
-                            class_info1= {
-                                'number': number,
-                                'is_lunch': True,
-                                'time': times[1],
-                                'title': None,
-                                'type': None,
-                                'partner': None,
-                                'location': None
-                            } 
-                            class_info2= {
-                                'number': number,
-                                'is_lunch': False,
-                                'time': times[2],
-                                'title': i[0],
-                                'type': i[1].strip('()'),
-                                'partner': i[2],
-                                'location': location
-                            }
-                            if schedule and schedule[-1]['date'] == date:
-                                schedule[-1]['classes'].append(class_info0)
-                                schedule[-1]['classes'].append(class_info1)
-                                schedule[-1]['classes'].append(class_info2)
-                            else:
-                                schedule.append({
-                                    'date': date,
-                                    'classes': [class_info0, class_info1, class_info2]
-                                })
-                        else:
-                            times = change_time(client_name, number, date)
-                            class_info0= {
-                                'number': number,
-                                'is_lunch': False,
-                                'time': times[0],
-                                'title': i[0],
-                                'type': i[1].strip('()'),
-                                'partner': i[2],
-                                'location': location
-                            }
-                            class_info1= {
-                                'number': number,
-                                'is_lunch': True,
-                                'time': times[1],
-                                'title': None,
-                                'type': None,
-                                'partner': None,
-                                'location': None
-                            } 
-                            if schedule and schedule[-1]['date'] == date:
-                                schedule[-1]['classes'].append(class_info0)
-                                schedule[-1]['classes'].append(class_info1)
-                            else:
-                                schedule.append({
-                                    'date': date,
-                                    'classes': [class_info0, class_info1]
-                                })
+                    class_info= {
+                        'number': number,
+                        'title': i[0],
+                        'type': i[1].strip('()'),
+                        'partner': i[2],
+                        'location': location
+                    }
+                    if schedule and schedule[-1]['date'] == date:
+                        schedule[-1]['classes'].append(class_info)
+
                     else:
-                        class_info= {
-                                'number': number,
-                                'is_lunch': False,
-                                'time': change_time(client_name, number, date),
-                                'title': i[0],
-                                'type': i[1].strip('()'),
-                                'partner': i[2],
-                                'location': location
-                        }
-                        if schedule and schedule[-1]['date'] == date:
-                            schedule[-1]['classes'].append(class_info)
-                        else:
-                            schedule.append({
-                                'date': date,
-                                'classes': [class_info]
-                            })
-                    tds_info = []
+                        schedule.append({
+                            'date': date,
+                            'classes': [class_info]
+                        })
+            tds_info = []
 
             
 

@@ -25,8 +25,6 @@ class schedules(models.Model):
 
 class classes(models.Model):
     schedule = models.ForeignKey(schedules, on_delete=models.CASCADE, related_name='classes')
-    time_bells = models.CharField(max_length=50, blank=True, null=True)
-    is_lunch = models.BooleanField()
     class_number = models.IntegerField()
     title = models.CharField(max_length=255, null=True)
     class_type = models.CharField(max_length=50, blank=True, null=True)
