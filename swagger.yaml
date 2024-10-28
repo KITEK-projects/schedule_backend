@@ -3,10 +3,10 @@ info:
   title: API для backend'а ScheduleApp спецификация
   version: 1.0.0
 servers:
-  - url: http://localhost:8000/api/v1/
+  - url: https://localhost:8000/api/v1/
     description: Dev server
 paths:
-  /schedule:
+  /schedule/:
     get:
       summary: Метод получения текущего расписания
       tags:
@@ -19,6 +19,10 @@ paths:
           schema:
             type: string
             example: ОО-31
+        - name: X-CLIENT-TIME
+          in: header
+          required: False
+          description: Дата с которой будет получен ответ от сервера.(Если в этой датe - нет расписания, показывает только то что есть в базе после этой даты)
       responses:
         '200':
           description: Успешный ответ с расписанием
@@ -46,7 +50,7 @@ paths:
                   error:
                     type: string
                     example: У вас нет расписания
-  /clients:
+  /clients/:
     get:
       summary: Метод получения клиентов с фильтрацией по is_teacher
       tags:
@@ -103,10 +107,6 @@ components:
                 items:
                   type: object
                   properties:
-                    time_bells:
-                      type: string
-                      example: 13:45 15:05
-                      description: Может иметь 4 времени
                     class_number:
                       type: number
                       example: 4
