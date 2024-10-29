@@ -4,7 +4,7 @@ from .models import *
 class ClassesSerializer(serializers.ModelSerializer):
     class Meta:
         model = classes
-        fields = ['class_number', 'title', 'class_type', 'partner', 'location']
+        fields = ['number', 'title', 'type', 'partner', 'location']
 
 
 class SchedulesSerializer(serializers.ModelSerializer):
@@ -12,7 +12,7 @@ class SchedulesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = schedules
-        fields = ['schedule_date', 'classes']
+        fields = ['date', 'classes']
 
 
 class ClientsSerializer(serializers.ModelSerializer):

@@ -13,27 +13,27 @@ class clients(models.Model):
 
 class schedules(models.Model):
     client = models.ForeignKey(clients, on_delete=models.CASCADE, related_name='schedules')
-    schedule_date = models.DateField()
+    date = models.DateField()
 
     class Meta:
-        unique_together = ('client', 'schedule_date')
+        unique_together = ('client', 'date')
         db_table = 'schedules'
 
     def __str__(self):
-        return f"Schedule for {self.client} on {self.schedule_date}"
+        return f"Schedule for {self.client} on {self.date}"
 
 
 class classes(models.Model):
     schedule = models.ForeignKey(schedules, on_delete=models.CASCADE, related_name='classes')
-    class_number = models.IntegerField()
+    number = models.IntegerField()
     title = models.CharField(max_length=255, null=True)
-    class_type = models.CharField(max_length=50, blank=True, null=True)
+    type = models.CharField(max_length=50, blank=True, null=True)
     partner = models.CharField(max_length=255, blank=True, null=True)
     location = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
-        unique_together = ('schedule', 'class_number')
+        unique_together = ('schedule', 'number')
         db_table = 'classes'
 
     def __str__(self):
-        return f"{self.title} (Class {self.class_number})"
+        return f"{self.title} (Class {self.number})"

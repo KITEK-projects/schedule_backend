@@ -37,7 +37,7 @@ class ScheduleApiView(APIView):
             client = clients.objects.get(client_name=client_name)
             
             # Получаем расписания клиента начиная с даты из запроса
-            schedules_list = schedules.objects.filter(client=client, schedule_date__gte=request_date)
+            schedules_list = schedules.objects.filter(client=client, date__gte=request_date)
             
             if schedules_list.exists():
                 # Если есть расписания, сериализуем их
@@ -49,11 +49,11 @@ class ScheduleApiView(APIView):
                     # Для каждого расписания добавляем информацию о классах
                     classes_list = schedule.classes.all()
                     data['schedule'].append({
-                        'schedule_date': schedule.schedule_date,
+                        'date': schedule.date,
                         'classes': [{
-                            'class_number': c.class_number,
+                            'number': c.number,
                             'title': c.title,
-                            'class_type': c.class_type,
+                            'type': c.type,
                             'partner': c.partner,
                             'location': c.location,
                         } for c in classes_list]

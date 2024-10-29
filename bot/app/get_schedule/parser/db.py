@@ -30,8 +30,8 @@ def create_tables():
                 CREATE TABLE IF NOT EXISTS schedules (
                     id SERIAL PRIMARY KEY,
                     client_id INTEGER REFERENCES clients(id),
-                    schedule_date DATE NOT NULL,
-                    UNIQUE(client_id, schedule_date)
+                    date DATE NOT NULL,
+                    UNIQUE(client_id, date)
                 );
                 """
             )
@@ -42,12 +42,12 @@ def create_tables():
                 CREATE TABLE IF NOT EXISTS classes (
                     id SERIAL PRIMARY KEY,
                     schedule_id INTEGER REFERENCES schedules(id),
-                    class_number INTEGER NOT NULL,
+                    number INTEGER NOT NULL,
                     title VARCHAR(255),
-                    class_type VARCHAR(50),
+                    type VARCHAR(50),
                     partner VARCHAR(255),
                     location VARCHAR(50),
-                    UNIQUE(schedule_id, class_number) -- уникальность по schedule_id и номеру занятия
+                    UNIQUE(schedule_id, number) -- уникальность по schedule_id и номеру занятия
                 );
                 """
             )
@@ -108,7 +108,7 @@ def insert_data(data):
                     cursor.execute(
                         """
                         SELECT id FROM schedules 
-                        WHERE client_id = %s AND schedule_date = %s;
+                        WHERE client_id = %s AND date = %s;
                         """,
                         (client_id, schedule_date),
                     )
@@ -129,7 +129,7 @@ def insert_data(data):
                         # Вставка нового расписания
                         cursor.execute(
                             """
-                            INSERT INTO schedules (client_id, schedule_date)
+                            INSERT INTO schedules (client_id, date)
                             VALUES (%s, %s)
                             RETURNING id;
                             """,
@@ -139,24 +139,24 @@ def insert_data(data):
 
                     # Вставка классов для расписания
                     for class_item in schedule["classes"]:
-                        class_number = class_item["number"]
+                        number = class_item["number"]
                         title = class_item["title"]
-                        class_type = class_item["type"]
+                        _type = class_item["type"]
                         partner = class_item["partner"]
                         location = class_item["location"]
 
                         cursor.execute(
                             """
-                            INSERT INTO classes (schedule_id, class_number, title, class_type, partner, location)
+                            INSERT INTO classes (schedule_id, number, title, type, partner, location)
                             VALUES (%s, %s, %s, %s, %s, %s)
-                            ON CONFLICT (schedule_id, class_number) 
-                            DO UPDATE SET title = EXCLUDED.title, class_type = EXCLUDED.class_type, partner = EXCLUDED.partner, location = EXCLUDED.location;
+                            ON CONFLICT (schedule_id, number) 
+                            DO UPDATE SET title = EXCLUDED.title, type = EXCLUDED.type, partner = EXCLUDED.partner, location = EXCLUDED.location;
                             """,
                             (
                                 schedule_id,
-                                class_number,
+                                number,
                                 title,
-                                class_type,
+                                _type,
                                 partner,
                                 location,
                             ),
