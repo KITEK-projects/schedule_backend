@@ -11,12 +11,12 @@ services:
       - "5432:5432"
 
   bot:
-    build: /bot/
+    build: bot/
     depends_on:
       - db
 
   web:
-    build: /backend/schedule/
+    build: backend/schedule/
     command: python manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
