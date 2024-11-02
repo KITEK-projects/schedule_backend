@@ -1,14 +1,15 @@
 import asyncio
 import logging
 import sys
+import os
+from dotenv import load_dotenv
 
 from aiogram import Bot, Dispatcher
-
-
-import my_token
 from app.get_schedule.handlers import router
 
-TOKEN = my_token.token
+load_dotenv()
+
+TOKEN = os.getenv('TOKEN')
 
 dp = Dispatcher()
 

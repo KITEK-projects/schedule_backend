@@ -3,7 +3,7 @@ info:
   title: API для backend'а ScheduleApp спецификация
   version: 1.0.0
 servers:
-  - url: https://localhost:8000/api/v1/
+  - url: https://schedule.ktkv.dev:8000/api/v1/
     description: Dev server
 paths:
   /schedule/:
