@@ -67,18 +67,19 @@ class ScheduleApiView(APIView):
             return Response({'error': "Клиент не найден"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class ClientsApiView(APIView):
     def get(self, request):
         is_teacher = request.query_params.get('is_teacher', None)
 
         if is_teacher is not None:
-            try:
-                is_teacher = bool(int(is_teacher))
-            except ValueError:
-                return Response({'error': 'Параметр is_teacher должен быть 0 или 1'}, status=status.HTTP_400_BAD_REQUEST)
+            if is_teacher.lower() == 'true':
+                is_teacher = True
+            elif is_teacher.lower() == 'false':
+                is_teacher = False
+            else:
+                return Response({'error': 'Параметр is_teacher должен быть true или false'}, status=status.HTTP_400_BAD_REQUEST)
 
-            clients_list = clients.objects.filter(is_teacher=is_teacher)
+            clients_list = Clients.objects.filter(is_teacher=is_teacher)
         else:
             return Response({'error': 'Обязательный параметр is_teacher не передан'}, status=status.HTTP_400_BAD_REQUEST)
 

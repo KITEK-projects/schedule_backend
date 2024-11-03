@@ -85,7 +85,7 @@ DATABASES = {
         'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': 'schedule_db',
+        'HOST': 'schedule-db',
         'PORT': 5432,
     }
 }
