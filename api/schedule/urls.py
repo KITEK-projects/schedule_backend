@@ -20,6 +20,6 @@ from schedule_api.views import ScheduleApiView, ClientsApiView
 
 
 urlpatterns = [
-    path('api/v1/schedule/', ScheduleApiView.as_view()),
-    path('api/v1/clients/', ClientsApiView.as_view())
+    path('v1/schedule/', ScheduleApiView.as_view()),
+    path('v1/clients/', ClientsApiView.as_view())
 ]
