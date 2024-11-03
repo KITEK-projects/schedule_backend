@@ -79,7 +79,7 @@ class ClientsApiView(APIView):
             else:
                 return Response({'error': 'Параметр is_teacher должен быть true или false'}, status=status.HTTP_400_BAD_REQUEST)
 
-            clients_list = Clients.objects.filter(is_teacher=is_teacher)
+            clients_list = clients.objects.filter(is_teacher=is_teacher)
         else:
             return Response({'error': 'Обязательный параметр is_teacher не передан'}, status=status.HTTP_400_BAD_REQUEST)
 
