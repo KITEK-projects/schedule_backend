@@ -22,7 +22,10 @@ paths:
         - name: X-CLIENT-TIME
           in: header
           required: False
-          description: Дата с которой будет получен ответ от сервера.(Если в этой датe - нет расписания, показывает только то что есть в базе после этой даты)
+          description: Дата с которой будет получен ответ от сервера(format - iso8601).(Если в этой датe - нет расписания, показывает только то что есть в базе после этой даты)
+          schema:
+            type: string
+            example: 20210411T010000+0600
       responses:
         '200':
           description: Успешный ответ с расписанием
@@ -80,7 +83,17 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: Параметр is_teacher должен быть 0 или 1 или Обязательный параметр is_teacher не передан
+                    example: Параметр is_teacher(true, false) Обязательный параметр is_teacher не передан
+        '404':
+          description: Клиенты не найдены, в бд нет расписания
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: В базе данных нет расписания, она пуста.
   
 components:
   schemas:
