@@ -80,7 +80,7 @@ class ClientsApiView(APIView):
                 return Response({'error': 'Параметр is_teacher должен быть true или false'}, 
                                 status=status.HTTP_400_BAD_REQUEST)
 
-            clients_list = сlients.objects.filter(is_teacher=is_teacher)
+            clients_list = clients.objects.filter(is_teacher=is_teacher)
             
             if not clients_list.exists():
                 return Response({'error': 'База данных пуста'}, status=status.HTTP_404_NOT_FOUND)
