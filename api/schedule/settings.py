@@ -14,6 +14,16 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+
+config = load_dotenv(dotenv_path)
+key = os.getenv("SECRET_KEY")
+host = os.getenv('HOST')
+user = os.getenv('USER')
+password = os.getenv('PASSWORD')
+name = os.getenv('NAME')
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,12 +31,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-load_dotenv()
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-h$j1q%zk=#)uy*f6yqfn!1vn!rxr#bh7*tgdolv1ml%@!_&y73' 
+SECRET_KEY = key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -82,10 +91,10 @@ WSGI_APPLICATION = 'schedule.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'schedule-db',
+        'NAME': name,
+        'USER': user,
+        'PASSWORD': password,
+        'HOST': host,
         'PORT': 5432,
     }
 }

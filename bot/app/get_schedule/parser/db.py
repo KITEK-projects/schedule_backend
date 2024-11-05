@@ -1,14 +1,25 @@
 import psycopg2
 
-from app.get_schedule.parser.config import *
 
+import os
+from dotenv import load_dotenv
+
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env')
+load_dotenv(dotenv_path)
+
+host = os.getenv('HOST')
+user = os.getenv('DB_USER')
+password = os.getenv('PASSWORD')
+name = os.getenv('DB_NAME')
+
+print(host, user, password, name)
 
 # Функция для создания таблиц
 def create_tables():
     connection = None
     try:
         connection = psycopg2.connect(
-            host=host, user=user, password=password, database=db_name
+            host=host, user=user, password=password, database=name
         )
         connection.autocommit = True
 
@@ -74,7 +85,7 @@ def create_tables():
 def insert_data(data):
     try:
         connection = psycopg2.connect(
-            host=host, user=user, password=password, database=db_name
+            host=host, user=user, password=password, database=name
         )
         connection.autocommit = True
 
@@ -176,7 +187,7 @@ def insert_data(data):
 def insert_admin(id):
     try:
         connection = psycopg2.connect(
-            host=host, user=user, password=password, database=db_name
+            host=host, user=user, password=password, database=name
         )
         connection.autocommit = True
 
@@ -202,7 +213,7 @@ def insert_admin(id):
 def delete_admin(id):
     try:
         connection = psycopg2.connect(
-            host=host, user=user, password=password, database=db_name
+            host=host, user=user, password=password, database=name
         )
         connection.autocommit = True
 
@@ -228,7 +239,7 @@ def delete_admin(id):
 def select_admin():
     try:
         connection = psycopg2.connect(
-            host=host, user=user, password=password, database=db_name
+            host=host, user=user, password=password, database=name
         )
         connection.autocommit = True
 
