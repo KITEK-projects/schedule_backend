@@ -28,7 +28,7 @@ paths:
             example: 20210411T010000+0600
       responses:
         '200':
-          description: Успешный ответ с расписанием
+          description: Отправляет расписание
           content:
             application/json:
               schema:
@@ -44,7 +44,7 @@ paths:
                     type: string
                     example: Клиент не найден
         '404':
-          description: Расписание не найдено
+          description: Расписание не найдено по времени переданому в хедер(если время не указано time берется с сервера)
           content:
             application/json:
               schema:
@@ -111,7 +111,7 @@ components:
           items:
             type: object
             properties:
-              schedule_date:
+              date:
                 type: string
                 example: 2021-10-12
               classes:
@@ -119,13 +119,13 @@ components:
                 items:
                   type: object
                   properties:
-                    class_number:
+                    number:
                       type: number
                       example: 4
                     title:
                       type: string
                       example: организация и технология производства продукции оп.
-                    class_type:
+                    type:
                       type: string
                       example: модуль 1
                     partner: 
