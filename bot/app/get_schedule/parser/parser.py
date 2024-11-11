@@ -158,5 +158,5 @@ def html_parse(path):
         
     return data + create_teachers(data)
 
-# with open("schedule.json", "w", encoding="utf-8") as file:
-#     json.dump(html_parse("schedule.html"), file, ensure_ascii=False, indent=4)
+with open("schedule1.json", "w", encoding="utf-8") as file:
+    json.dump(html_parse("schedule.html"), file, ensure_ascii=False, indent=4)

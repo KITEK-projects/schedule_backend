@@ -32,7 +32,7 @@ class classes(models.Model):
     location = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
-        unique_together = ('schedule', 'number')
+        unique_together = ('schedule', 'number', 'title', 'type', 'partner', 'location')
         db_table = 'classes'
 
     def __str__(self):
