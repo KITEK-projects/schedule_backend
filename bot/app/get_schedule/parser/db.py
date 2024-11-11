@@ -12,8 +12,6 @@ user = os.getenv('DB_USER')
 password = os.getenv('PASSWORD')
 name = os.getenv('DB_NAME')
 
-print(host, user, password, name)
-
 # Функция для создания таблиц
 def create_tables():
     connection = None
@@ -58,7 +56,7 @@ def create_tables():
                     type VARCHAR(50),
                     partner VARCHAR(255),
                     location VARCHAR(50),
-                    UNIQUE(schedule_id, number) -- уникальность по schedule_id и номеру занятия
+                    UNIQUE(schedule_id) -- уникальность по schedule_id и номеру занятия
                 );
                 """
             )
@@ -160,7 +158,7 @@ def insert_data(data):
                             """
                             INSERT INTO classes (schedule_id, number, title, type, partner, location)
                             VALUES (%s, %s, %s, %s, %s, %s)
-                            ON CONFLICT (schedule_id, number) 
+                            ON CONFLICT (schedule_id) 
                             DO UPDATE SET title = EXCLUDED.title, type = EXCLUDED.type, partner = EXCLUDED.partner, location = EXCLUDED.location;
                             """,
                             (
