@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'schedule_api',
     
     'rest_framework',
+    'corsheaders',
     
     'django.contrib.auth',
     'django.contrib.contenttypes',
