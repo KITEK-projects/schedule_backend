@@ -68,6 +68,10 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+CORS_ALLOW_HEADERS = [
+    "X-CLIENT-TIME",
+]
+
 ROOT_URLCONF = 'schedule.urls'
 
 TEMPLATES = [
