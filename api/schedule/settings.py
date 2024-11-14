@@ -69,7 +69,7 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_HEADERS = [
-    "X_CLIENT_TIME",
+    "X-CLIENT-TIME",
 ]
 
 ROOT_URLCONF = 'schedule.urls'
