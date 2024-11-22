@@ -19,9 +19,9 @@ dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
 config = load_dotenv(dotenv_path)
 key = os.getenv("SECRET_KEY")
 host = os.getenv('HOST')
-user = os.getenv('USER')
+user = os.getenv('DB_USER')
 password = os.getenv('PASSWORD')
-name = os.getenv('NAME')
+name = os.getenv('DB_NAME')
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -98,7 +98,7 @@ DATABASES = {
         'NAME': name,
         'USER': user,
         'PASSWORD': password,
-        'HOST': host,
+        'HOST': 'localhost',
         'PORT': 5432,
     }
 }

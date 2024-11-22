@@ -92,3 +92,9 @@ class ClientsApiView(APIView):
         client_data = [client.client_name for client in clients_list]
 
         return Response(client_data, status=status.HTTP_200_OK)
+    
+    
+class ScheduleEditApiView(APIView):
+    def put(self, request):
+        host = request.get_host()
+        return Response(f"{host}", status=status.HTTP_200_OK)
