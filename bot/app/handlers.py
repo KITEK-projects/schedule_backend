@@ -1,9 +1,13 @@
+import json
 from aiogram import Router
 from aiogram.types import Message, ContentType
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram import F
+
+import aiohttp
+import requests
 
 router = Router()
 
@@ -15,21 +19,32 @@ class AdminComands(StatesGroup):
 
 @router.message(F.content_type == ContentType.DOCUMENT)
 async def cmd_start(message: Message):
-
     await message.answer("Отправляю расписание")
+
     document = message.document
     file_id = document.file_id
 
+    # Получаем информацию о файле
     file_info = await message.bot.get_file(file_id)
 
     destination_file = './schedule.html'
-    await message.bot.download_file(file_info.file_path, destination_file)
     
+    # Скачиваем файл
+    await message.bot.download_file(file_info.file_path, destination_file)
+
+    # Чтение содержимого файла с кодировкой windows-1251
     with open(destination_file, encoding='windows-1251') as file:
         src = file.read()
-    
-    answer = src[:500]
-    await message.answer(answer)
+
+    # Отправка DELETE-запроса с содержимым файла как строки
+    # Отправка DELETE-запроса с данными как строки JSON
+    async with aiohttp.ClientSession() as session:
+        # Отправляем данные как JSON
+        payload = {"data": src}  # Передаем как строку
+        headers = {'Content-Type': 'application/json'}  # Указываем правильный тип контента
+        async with session.delete("http://localhost:8000/v1/edit/", json=payload, headers=headers) as response:
+            result = await response.json()
+            await message.answer(f"Ответ от сервера: {response.status}, {result}")
 
 
 

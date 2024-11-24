@@ -10,4 +10,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# CMD [ "python", "manage.py", "migrate" ]
 CMD ["python", "manage.py", "runserver"]

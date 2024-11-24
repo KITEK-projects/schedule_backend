@@ -79,10 +79,7 @@ def create_teachers(data):
     return partner_data
     
 
-def html_parse(path):
-    with open(path, encoding='windows-1251') as file:
-        src = file.read()
-
+def html_parse(src):
     soup = BeautifulSoup(src, "lxml")
 
     clients = soup.find_all("h2")

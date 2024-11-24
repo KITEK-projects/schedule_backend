@@ -1,18 +1,19 @@
+import json
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from datetime import datetime
+from rest_framework.views import APIView
+from rest_framework import status
+from .models import clients, schedules
 
 from datetime import date, timedelta
 
 from .models import *
 from .serializers import *
 
+from .parser import html_parse
 
-from datetime import datetime
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework import status
-from .models import clients, schedules
 
 class ScheduleApiView(APIView):
     def get(self, request):
@@ -96,5 +97,63 @@ class ClientsApiView(APIView):
     
 class ScheduleEditApiView(APIView):
     def put(self, request):
-        host = request.get_host()
-        return Response(f"{host}", status=status.HTTP_200_OK)
+        try:
+            body = html_parse(request.data)
+            schedule_data = json.loads(body)
+            for client_data in schedule_data:
+                client_name = client_data.get("client")
+                is_teacher = client_data.get("is_teacher", False)
+                
+                # Получаем или создаем клиента
+                client, _ = clients.objects.get_or_create(
+                    client_name=client_name,
+                    defaults={"is_teacher": is_teacher}
+                )
+
+                # Обновляем расписание
+                for schedule_item in client_data.get("schedule", []):
+                    date = schedule_item.get("date")
+                    classes_data = schedule_item.get("classes", [])
+
+                    # Создаем или обновляем расписание для клиента на указанную дату
+                    schedule, _ = schedules.objects.update_or_create(
+                        client=client,
+                        date=date
+                    )
+
+                    # Удаляем старые записи занятий для этого расписания
+                    schedule.classes.all().delete()
+
+                    # Создаем новые занятия
+                    for class_data in classes_data:
+                        classes.objects.create(
+                            schedule=schedule,
+                            **class_data
+                        )
+
+            return Response({"detail": "Schedules updated successfully."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        try:
+            body = html_parse(request.data["data"])
+            # Получаем данные из тела запроса
+            schedule_data = json.loads(body)
+
+            for client_data in schedule_data:
+                client_name = client_data.get("client")
+
+                # Получаем клиента
+                client = clients.objects.filter(client_name=client_name).first()
+                if not client:
+                    continue
+
+                # Удаляем расписания на указанные даты
+                for schedule_item in client_data.get("schedule", []):
+                    date = schedule_item.get("date")
+                    schedules.objects.filter(client=client, date=date).delete()
+
+            return Response({"detail": "Schedules deleted successfully."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

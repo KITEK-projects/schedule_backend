@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 
 from aiogram import Bot, Dispatcher
-from app.get_schedule.handlers import router
+from app.handlers import router
 
 load_dotenv()
 
