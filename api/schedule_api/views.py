@@ -100,33 +100,33 @@ class ScheduleEditApiView(APIView):
             for client_data in schedule_data:
                 client_name = client_data.get("client")
                 is_teacher = client_data.get("is_teacher", False)
-                
+
                 # Получаем или создаем клиента
                 client, _ = clients.objects.get_or_create(
                     client_name=client_name,
                     is_teacher=is_teacher
                 )
 
-                # # Обновляем расписание
-                # for schedule_item in client_data.get("schedule", []):
-                #     date = schedule_item.get("date")
-                #     classes_data = schedule_item.get("classes", [])
+                # Удаляем все существующие расписания для данного клиента
+                schedules.objects.filter(client=client).delete()
 
-                #     # Создаем или обновляем расписание для клиента на указанную дату
-                #     schedule, _ = schedules.objects.update_or_create(
-                #         client=client,
-                #         date=date
-                #     )
+                for schedule_item in client_data.get("schedule", []):
+                    date = schedule_item.get("date")
+                    classes_data = schedule_item.get("classes", [])
 
-                #     # Удаляем старые записи занятий для этого расписания
-                #     schedule.classes.all().delete()
+                    # Проверяем, существует ли уже расписание с таким же клиентом и датой
+                    # Создаем новое расписание
+                    schedule = schedules.objects.create(
+                        client=client,
+                        date=date
+                    )
 
-                #     # Создаем новые занятия
-                #     for class_data in classes_data:
-                #         classes.objects.create(
-                #             schedule=schedule,
-                #             **class_data
-                #         )
+                    # Создаем новые классы для данного расписания
+                    for class_data in classes_data:
+                        classes.objects.create(
+                            schedule=schedule,
+                            **class_data
+                        )
 
             return Response({"detail": "Schedules updated successfully."}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -134,18 +134,17 @@ class ScheduleEditApiView(APIView):
 
     def delete(self, request):
         try:
-            for client_data in request.data:
+            schedule_data = request.data
+            for client_data in schedule_data:
                 client_name = client_data.get("client")
+                is_teacher = client_data.get("is_teacher", False)
 
-                # Получаем клиента
-                client = clients.objects.filter(client_name=client_name).first()
-                if not client:
-                    continue
+                client, _ = clients.objects.get_or_create(
+                    client_name=client_name,
+                    is_teacher=is_teacher
+                )
 
-                # Удаляем расписания на указанные даты
-                for schedule_item in client_data.get("schedule", []):
-                    date = schedule_item.get("date")
-                    schedules.objects.filter(client=client, date=date).delete()
+                schedules.objects.filter(client=client).delete()
 
             return Response({"detail": "Schedules deleted successfully."}, status=status.HTTP_200_OK)
         except Exception as e:

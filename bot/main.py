@@ -5,6 +5,9 @@ import os
 from dotenv import load_dotenv
 
 from aiogram import Bot, Dispatcher
+from aiogram.enums import ParseMode
+from aiogram.client.default import DefaultBotProperties
+
 from app.handlers import router
 
 load_dotenv()
