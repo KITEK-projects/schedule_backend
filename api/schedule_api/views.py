@@ -95,33 +95,37 @@ class ClientsApiView(APIView):
     
 class ScheduleEditApiView(APIView):
     def put(self, request):
+        host = request.META.get('HTTP_HOST', '')
+        if not host.startswith('schedule-bot'):
+            return Response({'error': 'Доступ запрещен'}, status=status.HTTP_403_FORBIDDEN)
         try:
             schedule_data = request.data
+            
             for client_data in schedule_data:
                 client_name = client_data.get("client")
                 is_teacher = client_data.get("is_teacher", False)
 
-                # Получаем или создаем клиента
                 client, _ = clients.objects.get_or_create(
                     client_name=client_name,
                     is_teacher=is_teacher
                 )
 
-                # Удаляем все существующие расписания для данного клиента
-                schedules.objects.filter(client=client).delete()
-
+                # Обрабатываем каждое расписание
                 for schedule_item in client_data.get("schedule", []):
                     date = schedule_item.get("date")
                     classes_data = schedule_item.get("classes", [])
 
-                    # Проверяем, существует ли уже расписание с таким же клиентом и датой
-                    # Создаем новое расписание
-                    schedule = schedules.objects.create(
+                    # Пытаемся найти существующее расписание или создаем новое
+                    schedule, created = schedules.objects.get_or_create(
                         client=client,
                         date=date
                     )
 
-                    # Создаем новые классы для данного расписания
+                    # Если расписание существует, удаляем старые классы
+                    if not created:
+                        schedule.classes.all().delete()
+
+                    # Создаем новые классы для расписания
                     for class_data in classes_data:
                         classes.objects.create(
                             schedule=schedule,
@@ -133,6 +137,9 @@ class ScheduleEditApiView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
+        host = request.META.get('HTTP_HOST', '')
+        if not host.startswith('schedule-bot'):
+            return Response({'error': 'Доступ запрещен'}, status=status.HTTP_403_FORBIDDEN)
         try:
             schedule_data = request.data
             for client_data in schedule_data:

@@ -66,23 +66,23 @@ async def add_schedule_file(message: Message, state: FSMContext):
         async with aiohttp.ClientSession() as session:
             payload = html_parse(src)
             if current_state == fsm.add_schedule.state:
-                async with session.put("http://localhost:8000/v1/edit/", json=payload,
+                async with session.put("http://schedule-api/v1/edit/", json=payload,
                     headers={'Content-Type': 'application/json'}
                 ) as response:
-                    result = await response.json()
                     if response.status == 200:
                         await message.answer("Расписание добавлено успешно")
                     else: 
-                        await message.answer(f"[ Ошибка ]{response}\n\n {response.content}")
+                        error_text = await response.text()
+                        await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
             else:
-                async with session.delete("http://localhost:8000/v1/edit/", json=payload,
+                async with session.delete("http://schedule-api/v1/edit/", json=payload,
                     headers={'Content-Type': 'application/json'}
                 ) as response:
-                    result = await response.json()
                     if response.status == 200:
                         await message.answer("Расписание удалено успешно")
                     else: 
-                        await message.answer(f"[ Ошибка ]{response}, {response.content}")
+                        error_text = await response.text()
+                        await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
 
     except Exception as e:
         if "Cannot connect to host" in str(e):

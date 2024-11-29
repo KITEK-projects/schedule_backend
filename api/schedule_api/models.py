@@ -32,8 +32,14 @@ class classes(models.Model):
     location = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
-        unique_together = ('schedule', 'number', 'title', 'type', 'partner', 'location')
         db_table = 'classes'
 
     def __str__(self):
         return f"{self.title} (Class {self.number})"
+    
+
+# class users(models.Model):
+#     id = models.CharField(max_length=255, null=False)
+#     client = models.CharField(max_length=255, blank=True, null=True)
+    
+    

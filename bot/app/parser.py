@@ -80,6 +80,8 @@ def create_teachers(data):
     
 
 def html_parse(src):
+
+
     soup = BeautifulSoup(src, "lxml")
 
     clients = soup.find_all("h2")
@@ -155,5 +157,16 @@ def html_parse(src):
         
     return data + create_teachers(data)
 
-# with open("schedule1.json", "w", encoding="utf-8") as file:
-#     json.dump(html_parse("schedule.html"), file, ensure_ascii=False, indent=4)
+
+# if __name__ == "__main__":
+#     # Читаем HTML файл
+#     with open("schedule.html", "r", encoding="windows-1251") as file:
+#         html_content = file.read()
+    
+#     # Получаем результат парсинга
+#     result = html_parse(html_content)
+    
+#     # Сохраняем результат в JSON файл
+#     with open("scheduleYA.json", "w", encoding="utf-8") as file:
+#         json.dump(result, file, ensure_ascii=False, indent=4)
+
