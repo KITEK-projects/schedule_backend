@@ -10,5 +10,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# CMD [ "python", "manage.py", "migrate" ]
-CMD ["python", "manage.py", "runserver"]
+# Создаем скрипт для запуска
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+# Используем entrypoint скрипт вместо прямого запуска
+ENTRYPOINT ["./entrypoint.sh"]

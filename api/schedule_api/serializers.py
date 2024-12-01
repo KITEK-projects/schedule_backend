@@ -21,3 +21,9 @@ class ClientsSerializer(serializers.ModelSerializer):
     class Meta:
         model = clients
         fields = ['client_name', 'is_teacher', 'schedule']
+
+
+class UsersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = users
+        fields = ['user_id', 'is_admin']

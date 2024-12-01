@@ -35,7 +35,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -43,7 +43,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'schedule_api',
+    'schedule_api.apps.ScheduleApiConfig',
     'corsheaders',
     'rest_framework',
     
@@ -99,7 +99,7 @@ DATABASES = {
         'USER': user,
         'PASSWORD': password,
         'HOST': host,
-        'PORT': 5432,
+        'PORT': "5432",
     }
 }
 

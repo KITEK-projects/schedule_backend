@@ -5,12 +5,17 @@ from rest_framework.response import Response
 from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework import status
-from .models import clients, schedules
+from .models import clients, schedules, users
+from rest_framework.generics import get_object_or_404
+from .serializers import UsersSerializer
 
 from datetime import date, timedelta
 
 from .models import *
 from .serializers import *
+from .decorators import internal_api
+
+BOT = 'schedule-bot'
 
 
 class ScheduleApiView(APIView):
@@ -94,10 +99,8 @@ class ClientsApiView(APIView):
     
     
 class ScheduleEditApiView(APIView):
+    @internal_api
     def put(self, request):
-        host = request.META.get('HTTP_HOST', '')
-        if not host.startswith('schedule-bot'):
-            return Response({'error': 'Доступ запрещен'}, status=status.HTTP_403_FORBIDDEN)
         try:
             schedule_data = request.data
             
@@ -136,10 +139,8 @@ class ScheduleEditApiView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @internal_api
     def delete(self, request):
-        host = request.META.get('HTTP_HOST', '')
-        if not host.startswith('schedule-bot'):
-            return Response({'error': 'Доступ запрещен'}, status=status.HTTP_403_FORBIDDEN)
         try:
             schedule_data = request.data
             for client_data in schedule_data:
@@ -156,3 +157,44 @@ class ScheduleEditApiView(APIView):
             return Response({"detail": "Schedules deleted successfully."}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+class UsersApiView(APIView):
+    @internal_api
+    def get(self, request, user_id=None):
+        if user_id:
+            user = get_object_or_404(users, user_id=user_id)
+            if user.is_admin:
+                return Response({'is_admin': True}, status=status.HTTP_200_OK)
+            return Response({'is_admin': False}, status=status.HTTP_200_OK)
+        
+        # Если user_id не передан, возвращаем список всех пользователей
+        all_users = users.objects.all()
+        serializer = UsersSerializer(all_users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @internal_api
+    def post(self, request):
+        serializer = UsersSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @internal_api
+    def put(self, request, user_id):
+        user = get_object_or_404(users, user_id=user_id)
+        serializer = UsersSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @internal_api
+    def delete(self, request, user_id):
+        user = get_object_or_404(users, user_id=user_id)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        
+

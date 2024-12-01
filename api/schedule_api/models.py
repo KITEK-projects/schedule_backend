@@ -38,8 +38,8 @@ class classes(models.Model):
         return f"{self.title} (Class {self.number})"
     
 
-# class users(models.Model):
-#     id = models.CharField(max_length=255, null=False)
-#     client = models.CharField(max_length=255, blank=True, null=True)
+class users(models.Model):
+    user_id = models.CharField(max_length=255, null=False)
+    is_admin = models.BooleanField(default=False)
     
     
