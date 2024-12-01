@@ -57,4 +57,5 @@ services:
 
 networks:
   schedule:
+    name: schedule,
     driver: bridge
