@@ -17,7 +17,7 @@ services:
     container_name: schedule-web
     image: nginx
     volumes:
-     - ./templates:/etc/nginx/templates
+     - ./web:/usr/share/nginx/html:ro
     ports:
      - "8080:80"
     environment:
