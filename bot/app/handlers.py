@@ -1,4 +1,4 @@
-import json
+import os
 from aiogram import Router
 from aiogram.types import Message, ContentType, CallbackQuery
 from aiogram.filters import Command, StateFilter
@@ -7,21 +7,32 @@ from aiogram.fsm.context import FSMContext
 from aiogram import F
 
 import aiohttp
-import requests
+
 
 from .parser import html_parse 
-from .keyboards import action_selection
+from .keyboards import action_selection, start_keyboard
 
 router = Router()
 
+API = "http://schedule-api:8000/v1/"
 
 class fsm(StatesGroup):
     add_schedule = State()
     del_schedule = State()
 
 
+async def check_admin(user_id: int) -> bool:
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{API}users/{user_id}/", headers={
+            'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN')
+            }) as response:
+            return response.status == 200
+
 @router.message(StateFilter(None), Command('adds'))
 async def admin_command(message: Message):
+    if not await check_admin(message.from_user.id):
+        await message.answer("У вас нет прав администратора")
+        return
     await message.answer("Выберите действие:", reply_markup=action_selection().as_markup())
 
 
@@ -38,6 +49,12 @@ async def del_schedule(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     await callback.message.answer("Можете загрузить файл для удаления")
     await state.set_state(fsm.del_schedule)
+    
+@router.callback_query(StateFilter(None), F.data == "cancel")
+async def cancel(callback: CallbackQuery, state: FSMContext):
+    await callback.message.delete()
+    await callback.answer()
+    await state.set_state(None)
 
 
 
@@ -66,8 +83,11 @@ async def add_schedule_file(message: Message, state: FSMContext):
         async with aiohttp.ClientSession() as session:
             payload = html_parse(src)
             if current_state == fsm.add_schedule.state:
-                async with session.put("http://schedule-api/v1/edit/", json=payload,
-                    headers={'Content-Type': 'application/json'}
+                async with session.put(API + "edit/", json=payload,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN'),
+                        }
                 ) as response:
                     if response.status == 200:
                         await message.answer("Расписание добавлено успешно")
@@ -75,8 +95,11 @@ async def add_schedule_file(message: Message, state: FSMContext):
                         error_text = await response.text()
                         await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
             else:
-                async with session.delete("http://schedule-api/v1/edit/", json=payload,
-                    headers={'Content-Type': 'application/json'}
+                async with session.delete(API + "edit/", json=payload,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN'),
+                        }
                 ) as response:
                     if response.status == 200:
                         await message.answer("Расписание удалено успешно")
@@ -91,3 +114,105 @@ async def add_schedule_file(message: Message, state: FSMContext):
             await message.answer(f"[ERROR] {e}")
     finally:
         await state.set_state(None)
+        
+
+@router.message(Command('start'))
+async def start_command(message: Message):
+    await message.answer(
+        "Добро пожаловать! Здесь вы можете просмотреть расписание.",
+        reply_markup=start_keyboard().as_markup()
+    )
+
+@router.message(Command('add_admin'))
+async def add_admin(message: Message):
+    if not await check_admin(message.from_user.id):
+        await message.answer("У вас нет прав администратора")
+        return
+        
+    try:
+        # Получаем аргументы команды
+        args = message.text.split()
+        if len(args) != 2:
+            await message.answer("Использование: /add_admin <user_id>")
+            return
+            
+        target_user_id = int(args[1])
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(API + "users/", 
+                json={"user_id": target_user_id, "is_admin": True},
+                headers={
+                        'Content-Type': 'application/json',
+                        'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN'),
+                        }
+            ) as response:
+                if response.status == 201:
+                    await message.answer(f"Администратор (ID: {target_user_id}) успешно добавлен")
+                else:
+                    error_text = await response.text()
+                    await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
+    except ValueError:
+        await message.answer("ID пользователя должен быть числом")
+    except Exception as e:
+        await message.answer(f"[ERROR] {e}")
+
+@router.message(Command('delete_admin'))
+async def delete_admin(message: Message):
+    if not await check_admin(message.from_user.id):
+        await message.answer("У вас нет прав администратора")
+        return
+        
+    try:
+        args = message.text.split()
+        if len(args) != 2:
+            await message.answer("Использование: /delete_admin <user_id>")
+            return
+            
+        target_user_id = int(args[1])
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.delete(API + f"users/{target_user_id}/", 
+                headers={
+                        'Content-Type': 'application/json',
+                        'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN'),
+                        }
+            ) as response:
+                if response.status == 204:
+                    await message.answer(f"Администратор (ID: {target_user_id}) успешно удален")
+                else:
+                    error_text = await response.text()
+                    await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
+    except ValueError:
+        await message.answer("ID пользователя должен быть числом")
+    except Exception as e:
+        await message.answer(f"[ERROR] {e}")
+
+@router.message(Command('list_admins'))
+async def list_admins(message: Message):
+    if not await check_admin(message.from_user.id):
+        await message.answer("У вас нет прав администратора")
+        return
+        
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(API + "users/", headers={
+                        'Content-Type': 'application/json',
+                        'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN'),
+                        }
+            ) as response:
+                if response.status == 200:
+                    admins = await response.json()
+                    if not admins:
+                        await message.answer("Список администраторов пуст")
+                        return
+                        
+                    admin_list = "Список администраторов:\n"
+                    for admin in admins:
+                        admin_list += f"• `{admin['user_id']}`\n"
+                    await message.answer(admin_list, parse_mode="Markdown")
+                else:
+                    error_text = await response.text()
+                    await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
+    except Exception as e:
+        await message.answer(f"[ERROR] {e}")
+

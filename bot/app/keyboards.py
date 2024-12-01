@@ -9,4 +9,17 @@ def action_selection():
     builder.row(
         types.InlineKeyboardButton(text="Удалить", callback_data="del"),
     )
+    builder.row(
+        types.InlineKeyboardButton(text="Отмена", callback_data="cancel"),
+    )
+    return builder
+
+def start_keyboard():
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        types.InlineKeyboardButton(
+            text="Открыть расписание", 
+            web_app=types.WebAppInfo(url="https://schedule.omsktec-playgrounds.ru/")
+        ),
+    )
     return builder
