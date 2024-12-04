@@ -39,7 +39,10 @@ class classes(models.Model):
     
 
 class users(models.Model):
-    user_id = models.CharField(max_length=255, null=False)
+    user_id = models.CharField(max_length=100, unique=True)
     is_admin = models.BooleanField(default=False)
+    name = models.CharField(max_length=255, null=True)
+    is_super_admin = models.BooleanField(default=False)
+
     
     

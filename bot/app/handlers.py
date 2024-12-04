@@ -14,7 +14,7 @@ from .keyboards import action_selection, start_keyboard
 
 router = Router()
 
-API = "http://schedule-api:8000/v1/"
+API = "http://localhost:8000/v1/"
 
 class fsm(StatesGroup):
     add_schedule = State()
@@ -27,6 +27,16 @@ async def check_admin(user_id: int) -> bool:
             'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN')
             }) as response:
             return response.status == 200
+
+async def check_super_admin(user_id: int) -> bool:
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{API}users/{user_id}/", headers={
+            'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN')
+            }) as response:
+            if response.status == 200:
+                data = await response.json()
+                return data.get('is_super_admin', False)
+            return False
 
 @router.message(StateFilter(None), Command('adds'))
 async def admin_command(message: Message):
@@ -125,22 +135,24 @@ async def start_command(message: Message):
 
 @router.message(Command('add_admin'))
 async def add_admin(message: Message):
-    if not await check_admin(message.from_user.id):
+    if not await check_super_admin(message.from_user.id):
         await message.answer("У вас нет прав администратора")
         return
         
     try:
         # Получаем аргументы команды
         args = message.text.split()
-        if len(args) != 2:
-            await message.answer("Использование: /add_admin <user_id>")
+        if len(args) < 3:
+            await message.answer("Использование: /add_admin <user_id> <name> <is_super>")
             return
             
         target_user_id = int(args[1])
-        
+        name = args[2]
+        is_super = True if args[3] == "1" else False
+
         async with aiohttp.ClientSession() as session:
             async with session.post(API + "users/", 
-                json={"user_id": target_user_id, "is_admin": True},
+                json={"user_id": target_user_id, "is_admin": True, 'name': name, 'is_super_admin': is_super},
                 headers={
                         'Content-Type': 'application/json',
                         'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN'),
@@ -158,7 +170,7 @@ async def add_admin(message: Message):
 
 @router.message(Command('delete_admin'))
 async def delete_admin(message: Message):
-    if not await check_admin(message.from_user.id):
+    if not await check_super_admin(message.from_user.id):
         await message.answer("У вас нет прав администратора")
         return
         
@@ -189,7 +201,7 @@ async def delete_admin(message: Message):
 
 @router.message(Command('list_admins'))
 async def list_admins(message: Message):
-    if not await check_admin(message.from_user.id):
+    if not await check_super_admin(message.from_user.id):
         await message.answer("У вас нет прав администратора")
         return
         
@@ -208,8 +220,13 @@ async def list_admins(message: Message):
                         
                     admin_list = "Список администраторов:\n"
                     for admin in admins:
-                        admin_list += f"• `{admin['user_id']}`\n"
-                    await message.answer(admin_list, parse_mode="Markdown")
+                        admin_info = f"• ID: {admin.get('user_id', 'Н/Д')}"
+                        if 'name' in admin:
+                            admin_info += f", {admin['name']}"
+                        if 'is_super_admin' in admin:
+                            admin_info += f", {admin['is_super_admin']}"
+                        admin_list += admin_info + "\n"
+                    await message.answer(admin_list)
                 else:
                     error_text = await response.text()
                     await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")

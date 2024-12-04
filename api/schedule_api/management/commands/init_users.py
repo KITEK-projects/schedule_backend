@@ -7,15 +7,15 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         # Список ID пользователей, которые должны быть в системе
         default_users = [
-            {'user_id': '1509968545', 'is_admin': True},  # Замените на реальные ID
-            {'user_id': '267587484', 'is_admin': True},
-            # Добавьте других пользователей по необходимости
+            {'user_id': '1509968545', 'is_admin': True, 'name': 'I', 'is_super_admin': True},
+            {'user_id': '267587484', 'is_admin': True, 'name': 'Павел Алексеевич', 'is_super_admin': True},
         ]
 
         for user_data in default_users:
             user, created = users.objects.get_or_create(
                 user_id=user_data['user_id'],
-                defaults={'is_admin': user_data['is_admin']}
+                name=user_data['name'],
+                defaults={'is_admin': user_data['is_admin'], 'is_super_admin': user_data['is_super_admin']}
             )
             if created:
                 self.stdout.write(

@@ -165,8 +165,8 @@ class UsersApiView(APIView):
         if user_id:
             user = get_object_or_404(users, user_id=user_id)
             if user.is_admin:
-                return Response({'is_admin': True}, status=status.HTTP_200_OK)
-            return Response({'is_admin': False}, status=status.HTTP_200_OK)
+                return Response({'is_admin': True, "is_super_admin": user.is_super_admin}, status=status.HTTP_200_OK)
+            return Response({'is_admin': False, "is_super_admin": user.is_super_admin}, status=status.HTTP_200_OK)
         
         # Если user_id не передан, возвращаем список всех пользователей
         all_users = users.objects.all()

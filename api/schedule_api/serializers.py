@@ -26,4 +26,4 @@ class ClientsSerializer(serializers.ModelSerializer):
 class UsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = users
-        fields = ['user_id', 'is_admin']
+        fields = ['user_id', 'is_admin', 'name', 'is_super_admin']
