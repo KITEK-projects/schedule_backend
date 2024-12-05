@@ -23,3 +23,10 @@ def start_keyboard():
         ),
     )
     return builder
+
+def cancel_keyboard():
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        types.InlineKeyboardButton(text="Отмена", callback_data="cancel"),
+    )
+    return builder

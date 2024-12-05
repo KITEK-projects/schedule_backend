@@ -10,11 +10,11 @@ import aiohttp
 
 
 from .parser import html_parse 
-from .keyboards import action_selection, start_keyboard
+from .keyboards import action_selection, start_keyboard, cancel_keyboard
 
 router = Router()
 
-API = "http://localhost:8000/v1/"
+API = "http://schedule-db:8000/v1/"
 
 class fsm(StatesGroup):
     add_schedule = State()
@@ -41,7 +41,7 @@ async def check_super_admin(user_id: int) -> bool:
 @router.message(StateFilter(None), Command('adds'))
 async def admin_command(message: Message):
     if not await check_admin(message.from_user.id):
-        await message.answer("У вас нет прав администратора")
+        await message.answer("⛔ У вас нет прав администратора")
         return
     await message.answer("Выберите действие:", reply_markup=action_selection().as_markup())
 
@@ -50,17 +50,17 @@ async def admin_command(message: Message):
 async def add_schedule(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await callback.answer()
-    await callback.message.answer("Можете загрузить файл для добаления/обновления")
+    await callback.message.answer("Можете загрузить файл для добаления/обновления", reply_markup=cancel_keyboard().as_markup())
     await state.set_state(fsm.add_schedule)
 
 @router.callback_query(StateFilter(None), F.data == "del")
 async def del_schedule(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await callback.answer()
-    await callback.message.answer("Можете загрузить файл для удаления")
+    await callback.message.answer("Можете загрузить файл для удаления", reply_markup=cancel_keyboard().as_markup())
     await state.set_state(fsm.del_schedule)
     
-@router.callback_query(StateFilter(None), F.data == "cancel")
+@router.callback_query(F.data == "cancel")
 async def cancel(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await callback.answer()
@@ -89,33 +89,50 @@ async def add_schedule_file(message: Message, state: FSMContext):
 
     try:    
         current_state = await state.get_state()
+        user_id = message.from_user.id
+        user_name = message.from_user.full_name
 
         async with aiohttp.ClientSession() as session:
+            # Получаем список всех суперадминов
+            async with session.get(API + "users/", headers={
+                'Content-Type': 'application/json',
+                'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN'),
+            }) as response:
+                if response.status == 200:
+                    admins = await response.json()
+                    super_admins = [admin['user_id'] for admin in admins if admin.get('is_super_admin')]
+
             payload = html_parse(src)
+            action_type = "добавлено" if current_state == fsm.add_schedule.state else "удалено"
+            
+            # Основной запрос на изменение расписания
             if current_state == fsm.add_schedule.state:
-                async with session.put(API + "edit/", json=payload,
-                    headers={
-                        'Content-Type': 'application/json',
-                        'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN'),
-                        }
-                ) as response:
-                    if response.status == 200:
-                        await message.answer("Расписание добавлено успешно")
-                    else: 
-                        error_text = await response.text()
-                        await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
+                endpoint = "edit/"
+                method = session.put
             else:
-                async with session.delete(API + "edit/", json=payload,
-                    headers={
-                        'Content-Type': 'application/json',
-                        'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN'),
-                        }
-                ) as response:
-                    if response.status == 200:
-                        await message.answer("Расписание удалено успешно")
-                    else: 
-                        error_text = await response.text()
-                        await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
+                endpoint = "edit/"
+                method = session.delete
+
+            async with method(API + endpoint, json=payload,
+                headers={
+                    'Content-Type': 'application/json',
+                    'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN'),
+                }
+            ) as response:
+                if response.status == 200:
+                    await message.answer(f"Расписание {action_type} успешно")
+                    
+                    # Отправляем уведомление всем суперадминам, кроме инициатора
+                    notification_text = f"Пользователь {user_name} (ID: {user_id}) {action_type} расписание"
+                    for admin_id in super_admins:
+                        if admin_id != user_id:  # Не отправляем уведомление самому себе
+                            try:
+                                await message.bot.send_message(admin_id, notification_text)
+                            except Exception as e:
+                                print(f"Ошибка отправки уведомления админу {admin_id}: {e}")
+                else: 
+                    error_text = await response.text()
+                    await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
 
     except Exception as e:
         if "Cannot connect to host" in str(e):
@@ -133,17 +150,44 @@ async def start_command(message: Message):
         reply_markup=start_keyboard().as_markup()
     )
 
-@router.message(Command('add_admin'))
+@router.message(Command('help'))
+async def help_command(message: Message):
+    user_id = message.from_user.id
+    
+    # Проверяем является ли пользователь супер-админом
+    is_super_admin = await check_super_admin(user_id)
+    # Проверяем является ли пользователь обычным админом
+    is_admin = await check_admin(user_id)
+    
+    if is_super_admin:
+        help_text = (
+            "🌟 Команды супер-администратора:\n"
+            "/adds - Добавить/удалить расписание\n"
+            "/adda - Добавить администратора\n"
+            "/dela - Удалить администратора\n"
+            "/lsta - Список администраторов"
+        )
+    elif is_admin:
+        help_text = (
+            "👨‍💼 Команды администратора:\n"
+            "/adds - Добавить/удалить расписание"
+        )
+    else:
+        help_text = "👋 Добро пожаловать! Здесь вы можете просмотреть расписание."
+    
+    await message.answer(help_text, reply_markup=start_keyboard().as_markup())
+
+@router.message(Command('adda'))
 async def add_admin(message: Message):
     if not await check_super_admin(message.from_user.id):
-        await message.answer("У вас нет прав администратора")
+        await message.answer("⛔ У вас нет прав администратора")
         return
         
     try:
         # Получаем аргументы команды
         args = message.text.split()
         if len(args) < 3:
-            await message.answer("Использование: /add_admin <user_id> <name> <is_super>")
+            await message.answer("Использование: /adda <user_id> <name> <is_super>")
             return
             
         target_user_id = int(args[1])
@@ -168,16 +212,16 @@ async def add_admin(message: Message):
     except Exception as e:
         await message.answer(f"[ERROR] {e}")
 
-@router.message(Command('delete_admin'))
+@router.message(Command('dela'))
 async def delete_admin(message: Message):
     if not await check_super_admin(message.from_user.id):
-        await message.answer("У вас нет прав администратора")
+        await message.answer("⛔ У вас нет прав администратора")
         return
         
     try:
         args = message.text.split()
         if len(args) != 2:
-            await message.answer("Использование: /delete_admin <user_id>")
+            await message.answer("Использование: /dela <user_id>")
             return
             
         target_user_id = int(args[1])
@@ -199,10 +243,10 @@ async def delete_admin(message: Message):
     except Exception as e:
         await message.answer(f"[ERROR] {e}")
 
-@router.message(Command('list_admins'))
+@router.message(Command('lsta'))
 async def list_admins(message: Message):
     if not await check_super_admin(message.from_user.id):
-        await message.answer("У вас нет прав администратора")
+        await message.answer("⛔ У вас нет прав администратора")
         return
         
     try:
@@ -220,13 +264,14 @@ async def list_admins(message: Message):
                         
                     admin_list = "Список администраторов:\n"
                     for admin in admins:
-                        admin_info = f"• ID: {admin.get('user_id', 'Н/Д')}"
+                        admin_info = f"• <code>{admin.get('user_id', 'Н/Д')}</code>"
                         if 'name' in admin:
-                            admin_info += f", {admin['name']}"
+                            admin_info += f" - {admin['name']}"
                         if 'is_super_admin' in admin:
-                            admin_info += f", {admin['is_super_admin']}"
+                            role = "Супер админ" if admin['is_super_admin'] else "Админ"
+                            admin_info += f" ({role})"
                         admin_list += admin_info + "\n"
-                    await message.answer(admin_list)
+                    await message.answer(admin_list, parse_mode="HTML")
                 else:
                     error_text = await response.text()
                     await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
