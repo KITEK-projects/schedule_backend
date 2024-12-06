@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework import status
-from .models import clients, schedules, users
+from .models import clients, schedules, Users
 from rest_framework.generics import get_object_or_404
 from .serializers import UsersSerializer
 
@@ -152,9 +152,16 @@ class ScheduleEditApiView(APIView):
                     is_teacher=is_teacher
                 )
 
+                # Удаляем расписания клиента
                 schedules.objects.filter(client=client).delete()
+                
+                # Проверяем есть ли у клиента другие расписания
+                if not schedules.objects.filter(client=client).exists():
+                    # Если расписаний нет - удаляем клиента
+                    client.delete()
 
-            return Response({"detail": "Schedules deleted successfully."}, status=status.HTTP_200_OK)
+            return Response({"detail": "Schedules and empty clients deleted successfully."}, 
+                          status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -163,13 +170,13 @@ class UsersApiView(APIView):
     @internal_api
     def get(self, request, user_id=None):
         if user_id:
-            user = get_object_or_404(users, user_id=user_id)
+            user = get_object_or_404(Users, user_id=user_id)
             if user.is_admin:
                 return Response({'is_admin': True, "is_super_admin": user.is_super_admin}, status=status.HTTP_200_OK)
             return Response({'is_admin': False, "is_super_admin": user.is_super_admin}, status=status.HTTP_200_OK)
         
         # Если user_id не передан, возвращаем список всех пользователей
-        all_users = users.objects.all()
+        all_users = Users.objects.all()
         serializer = UsersSerializer(all_users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
@@ -183,7 +190,7 @@ class UsersApiView(APIView):
 
     @internal_api
     def put(self, request, user_id):
-        user = get_object_or_404(users, user_id=user_id)
+        user = get_object_or_404(Users, user_id=user_id)
         serializer = UsersSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -192,7 +199,7 @@ class UsersApiView(APIView):
 
     @internal_api
     def delete(self, request, user_id):
-        user = get_object_or_404(users, user_id=user_id)
+        user = get_object_or_404(Users, user_id=user_id)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
         

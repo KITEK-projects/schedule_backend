@@ -125,9 +125,16 @@ async def add_schedule_file(message: Message, state: FSMContext):
                     # Отправляем уведомление всем суперадминам, кроме инициатора
                     notification_text = f"Пользователь {user_name} (ID: {user_id}) {action_type} расписание"
                     for admin_id in super_admins:
-                        if admin_id != user_id:  # Не отправляем уведомление самому себе
+                        if str(admin_id) != str(user_id):  # Не отправляем уведомление самому себе
                             try:
                                 await message.bot.send_message(admin_id, notification_text)
+                                # Открываем файл и отправляем его содержимое
+                                with open('./schedule.html', 'rb') as file:
+                                    await message.bot.send_document(
+                                        admin_id, 
+                                        document=file,
+                                        caption="Расписание"
+                                    )
                             except Exception as e:
                                 print(f"Ошибка отправки уведомления админу {admin_id}: {e}")
                 else: 

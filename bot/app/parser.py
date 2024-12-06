@@ -91,6 +91,10 @@ def html_parse(src):
         trs = table.find_all("tr")
         
         client_name = client.get_text().split(' ')[-1].strip('!*:.')
+        # Разделяем имя на буквы и цифры
+        letters = ''.join(c for c in client_name if c.isalpha())
+        numbers = ''.join(c for c in client_name if c.isdigit())
+        client_name = f"{letters}-{numbers}" if numbers else letters
         schedule = []
 
         for tr in trs[1:]:
@@ -114,10 +118,21 @@ def html_parse(src):
             if len(tds_soup) > 1:
                 location = tds_soup[1].get_text().strip("-")
                 if location == "":
-                    location == None
+                    location = None
+
+            # Проверяем, есть ли содержимое в ячейке
+            if tds_soup[0].get_text().strip() == "&nbsp;" or not tds:
+                # Если день уже существует, пропускаем
+                if schedule and schedule[-1]['date'] == date:
+                    continue
+                # Добавляем пустой день
+                schedule.append({
+                    'date': date,
+                    'classes': []
+                })
+                continue
 
             if len(tds) == 3:
-                # для цикла
                 tds_info = [tds]
             elif len(tds) == 6:
                 tds_info = [tds[0:3], tds[3:6]]

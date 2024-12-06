@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from schedule_api.models import users
+from schedule_api.models import Users
 
 class Command(BaseCommand):
     help = 'Инициализация базовых пользователей'
@@ -12,7 +12,7 @@ class Command(BaseCommand):
         ]
 
         for user_data in default_users:
-            user, created = users.objects.get_or_create(
+            user, created = Users.objects.get_or_create(
                 user_id=user_data['user_id'],
                 name=user_data['name'],
                 defaults={'is_admin': user_data['is_admin'], 'is_super_admin': user_data['is_super_admin']}
