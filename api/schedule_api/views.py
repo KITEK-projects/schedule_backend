@@ -111,15 +111,15 @@ class ScheduleEditApiView(APIView):
                     is_teacher=is_teacher
                 )
 
-                print(client)
-
                 # Обрабатываем каждое расписание
                 for schedule_item in client_data.get("schedule", []):
                     date = schedule_item.get("date")
                     classes_data = schedule_item.get("classes", [])
 
-                    # Удаляем существующее расписание перед добавлением новых данных
-                    schedules.objects.filter(client=client, date=date).delete()
+                    # Проверяем, существует ли расписание перед удалением
+                    existing_schedule = schedules.objects.filter(client=client, date=date)
+                    if existing_schedule.exists():
+                        existing_schedule.delete()
 
                     # Создаем новое расписание
                     schedule = schedules.objects.create(
