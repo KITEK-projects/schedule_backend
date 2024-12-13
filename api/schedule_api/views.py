@@ -9,8 +9,6 @@ from .models import clients, schedules, Users
 from rest_framework.generics import get_object_or_404
 from .serializers import UsersSerializer
 
-from datetime import date, timedelta
-
 from .models import *
 from .serializers import *
 from .decorators import internal_api
@@ -113,20 +111,21 @@ class ScheduleEditApiView(APIView):
                     is_teacher=is_teacher
                 )
 
+                print(client)
+
                 # Обрабатываем каждое расписание
                 for schedule_item in client_data.get("schedule", []):
                     date = schedule_item.get("date")
                     classes_data = schedule_item.get("classes", [])
 
-                    # Пытаемся найти существующее расписание или создаем новое
-                    schedule, created = schedules.objects.get_or_create(
+                    # Удаляем существующее расписание перед добавлением новых данных
+                    schedules.objects.filter(client=client, date=date).delete()
+
+                    # Создаем новое расписание
+                    schedule = schedules.objects.create(
                         client=client,
                         date=date
                     )
-
-                    # Если расписание существует, удаляем старые классы
-                    if not created:
-                        schedule.classes.all().delete()
 
                     # Создаем новые классы для расписания
                     for class_data in classes_data:

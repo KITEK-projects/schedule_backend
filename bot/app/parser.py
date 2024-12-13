@@ -90,7 +90,7 @@ def html_parse(src):
         table = client.find_next_sibling("table")
         trs = table.find_all("tr")
         
-        client_name = client.get_text().split(' ')[-1].strip('!*:.')
+        client_name = client.get_text().split(' ')[-1].strip('!*:.,')
         # Разделяем имя на буквы и цифры
         letters = ''.join(c for c in client_name if c.isalpha())
         numbers = ''.join(c for c in client_name if c.isdigit())
@@ -175,7 +175,7 @@ def html_parse(src):
 
 # if __name__ == "__main__":
 #     # Читаем HTML файл
-#     with open("schedule.html", "r", encoding="windows-1251") as file:
+#     with open("12дек-главный.html", "r", encoding="windows-1251") as file:
 #         html_content = file.read()
     
 #     # Получаем результат парсинга
