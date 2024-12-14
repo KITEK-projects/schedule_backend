@@ -80,8 +80,6 @@ def create_teachers(data):
     
 
 def html_parse(src):
-
-
     soup = BeautifulSoup(src, "lxml")
 
     clients = soup.find_all("h2")
@@ -142,7 +140,7 @@ def html_parse(src):
                 if i[0] != "":
                     class_info= {
                         'number': number,
-                        'title': i[0],
+                        'title': i[0].capitalize(),
                         'type': i[1].strip('()'),
                         'partner': i[2],
                         'location': location

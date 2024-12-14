@@ -14,7 +14,10 @@ from .keyboards import action_selection, start_keyboard, cancel_keyboard
 
 router = Router()
 
-API = "http://schedule-api:8000/v1/"
+API = "http://localhost:8000/v1/"
+
+document = None
+file_id = ""
 
 class fsm(StatesGroup):
     add_schedule = State()
@@ -38,59 +41,48 @@ async def check_super_admin(user_id: int) -> bool:
                 return data.get('is_super_admin', False)
             return False
 
-@router.message(StateFilter(None), Command('adds'))
-async def admin_command(message: Message):
+
+@router.message(F.content_type == ContentType.DOCUMENT)
+async def add_schedule_file(message: Message, state: FSMContext):
     if not await check_admin(message.from_user.id):
         await message.answer("⛔ У вас нет прав администратора")
         return
-    await message.answer("Выберите действие:", reply_markup=action_selection().as_markup())
-
-
-@router.callback_query(StateFilter(None), F.data == "add")
-async def add_schedule(callback: CallbackQuery, state: FSMContext):
-    await callback.message.delete()
-    await callback.answer()
-    await callback.message.answer("Можете загрузить файл для добаления/обновления", reply_markup=cancel_keyboard().as_markup())
-    await state.set_state(fsm.add_schedule)
-
-@router.callback_query(StateFilter(None), F.data == "del")
-async def del_schedule(callback: CallbackQuery, state: FSMContext):
-    await callback.message.delete()
-    await callback.answer()
-    await callback.message.answer("Можете загрузить файл для удаления", reply_markup=cancel_keyboard().as_markup())
-    await state.set_state(fsm.del_schedule)
     
-@router.callback_query(F.data == "cancel")
-async def cancel(callback: CallbackQuery, state: FSMContext):
-    await callback.message.delete()
-    await callback.answer()
-    await state.set_state(None)
-
-
-
-@router.message(F.content_type == ContentType.DOCUMENT, StateFilter(fsm.add_schedule, fsm.del_schedule))
-async def add_schedule_file(message: Message, state: FSMContext):
-    await message.answer("Обработка запроса...")
+    global document, file_id
     
     document = message.document
     file_id = document.file_id
 
+    await message.answer("Выберите действие:", reply_markup=action_selection().as_markup())
+
+@router.callback_query(F.data == "cancel")
+async def cancel(callback: CallbackQuery):
+    await callback.message.delete()
+    await callback.answer()
+    await callback.message.answer("Отправка отменена")
+
+@router.callback_query(F.data.in_(["del", "add"]))
+async def edit_schedule(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.delete()
+    await callback.message.answer("Обработка...")
     # Получаем информацию о файле
-    file_info = await message.bot.get_file(file_id)
+    file_info = await callback.message.bot.get_file(file_id)
 
     destination_file = './schedule.html'
     
     # Скачиваем файл
-    await message.bot.download_file(file_info.file_path, destination_file)
+    await callback.message.bot.download_file(file_info.file_path, destination_file)
 
     # Чтение содержимого файла с кодировкой windows-1251
     with open(destination_file, encoding='windows-1251') as file:
         src = file.read()
 
     try:    
-        current_state = await state.get_state()
-        user_id = message.from_user.id
-        user_name = message.from_user.full_name
+        current_state = callback.data
+        print(current_state)
+        user_id = callback.from_user.id
+        user_name = callback.from_user.full_name
 
         async with aiohttp.ClientSession() as session:
             # Получаем список всех суперадминов
@@ -103,10 +95,10 @@ async def add_schedule_file(message: Message, state: FSMContext):
                     super_admins = [admin['user_id'] for admin in admins if admin.get('is_super_admin')]
 
             payload = html_parse(src)
-            action_type = "добавлено" if current_state == fsm.add_schedule.state else "удалено"
+            action_type = "добавлено" if current_state == "add" else "удалено"
             
             # Основной запрос на изменение расписания
-            if current_state == fsm.add_schedule.state:
+            if current_state == "add":
                 endpoint = "edit/"
                 method = session.put
             else:
@@ -120,35 +112,31 @@ async def add_schedule_file(message: Message, state: FSMContext):
                 }
             ) as response:
                 if response.status == 200:
-                    await message.answer(f"Расписание {action_type} успешно")
+                    await callback.message.answer(f"Расписание {action_type} успешно")
                     
                     # Отправляем уведомление всем суперадминам, кроме инициатора
                     notification_text = f"Пользователь {user_name} (ID: {user_id}) {action_type} расписание"
                     for admin_id in super_admins:
                         if str(admin_id) != str(user_id):  # Не отправляем уведомление самому себе
                             try:
-                                await message.bot.send_message(admin_id, notification_text)
-                                # Открываем файл и отправляем его содержимое
-                                with open('./schedule.html', 'rb') as file:
-                                    await message.bot.send_document(
-                                        admin_id, 
-                                        document=file,
-                                        caption="Расписание"
-                                    )
+                                await callback.message.bot.send_message(admin_id, notification_text)
+                                # Отправляем файл администратору
+                                await callback.message.bot.send_document(
+                                    admin_id, 
+                                    document=file_id
+                                )
                             except Exception as e:
                                 print(f"Ошибка отправки уведомления админу {admin_id}: {e}")
                 else: 
                     error_text = await response.text()
-                    await message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
+                    await callback.message.answer(f"[ Ошибка ] {response.status}\n\nТекст ошибки: {error_text}")
 
     except Exception as e:
         if "Cannot connect to host" in str(e):
-            await message.answer("[ Ошибка ] Не возможно подключится к серверу")
+            await callback.message.answer("[ Ошибка ] Не возможно подключится к серверу")
         else:
-            await message.answer(f"[ERROR] {e}")
-    finally:
-        await state.set_state(None)
-        
+            await callback.message.answer(f"[ERROR] {e}")  
+
 
 @router.message(Command('start'))
 async def start_command(message: Message):
@@ -169,7 +157,7 @@ async def help_command(message: Message):
     if is_super_admin:
         help_text = (
             "🌟 Команды супер-администратора:\n"
-            "/adds - Добавить/удалить расписание\n"
+            "Чтобы добавить расписание пришлите файл\n"
             "/adda - Добавить администратора\n"
             "/dela - Удалить администратора\n"
             "/lsta - Список администраторов"
@@ -177,7 +165,7 @@ async def help_command(message: Message):
     elif is_admin:
         help_text = (
             "👨‍💼 Команды администратора:\n"
-            "/adds - Добавить/удалить расписание"
+            "Чтобы добавить расписание пришлите файл"
         )
     else:
         help_text = "👋 Добро пожаловать! Здесь вы можете просмотреть расписание."
