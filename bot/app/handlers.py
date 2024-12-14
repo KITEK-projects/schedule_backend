@@ -14,7 +14,7 @@ from .keyboards import action_selection, start_keyboard, cancel_keyboard
 
 router = Router()
 
-API = "http://localhost:8000/v1/"
+API = "http://schedule-api:8000/v1/"
 
 document = None
 file_id = ""
