@@ -29,7 +29,7 @@ class ScheduleApiView(APIView):
                 request_date = datetime.fromisoformat(request_date_str).date()
             except:
                 # В случае ощибки берет дату сервера
-                request_date =datetime.today().date()
+                request_date = datetime.today().date()
         else:
             # Если дата не указана, используем дату сервера
             request_date = datetime.today().date()
@@ -116,22 +116,18 @@ class ScheduleEditApiView(APIView):
                     date = schedule_item.get("date")
                     classes_data = schedule_item.get("classes", [])
 
-                    # Проверяем, существует ли расписание перед удалением
-                    existing_schedule = schedules.objects.filter(client=client, date=date)
-                    if existing_schedule.exists():
-                        existing_schedule.delete()
+                    # Проверяем, существует ли расписание
+                    existing_schedule, _ = schedules.objects.get_or_create(client=client, date=date)
 
-                    # Создаем новое расписание
-                    schedule = schedules.objects.create(
-                        client=client,
-                        date=date
-                    )
-
-                    # Создаем новые классы для расписания
                     for class_data in classes_data:
-                        classes.objects.create(
-                            schedule=schedule,
+                        class_item = {
                             **class_data
+                        }
+                        class_res, _ = classes.objects.update_or_create(
+                            schedule=existing_schedule,
+                            number=class_data["number"],
+                            title=class_data["title"],
+                            defaults=class_item,
                         )
 
             return Response({"detail": "Schedules updated successfully."}, status=status.HTTP_200_OK)
@@ -143,20 +139,27 @@ class ScheduleEditApiView(APIView):
         try:
             schedule_data = request.data
             for client_data in schedule_data:
+                # Получаем одного клиента расписания
                 client_name = client_data.get("client")
                 is_teacher = client_data.get("is_teacher", False)
 
+                # Находим такого в бд
                 client, _ = clients.objects.get_or_create(
                     client_name=client_name,
                     is_teacher=is_teacher
                 )
 
-                # Удаляем расписания клиента
-                schedules.objects.filter(client=client).delete()
-                
+                # Получаем расписания клиента
+                existing_schedules = schedules.objects.filter(client=client)
+
+                # Перебераем входной json
+                for schedule_item in client_data.get("schedule", []):
+                    # Получаем дату из каждого айтема
+                    date = schedule_item.get("date")
+                    existing_schedules.filter(date=date).delete()
+
                 # Проверяем есть ли у клиента другие расписания
-                if not schedules.objects.filter(client=client).exists():
-                    # Если расписаний нет - удаляем клиента
+                if not existing_schedules.exists():
                     client.delete()
 
             return Response({"detail": "Schedules and empty clients deleted successfully."}, 

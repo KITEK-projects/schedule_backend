@@ -137,7 +137,6 @@ async def edit_schedule(callback: CallbackQuery):
         else:
             await callback.message.answer(f"[ERROR] {e}")  
 
-
 @router.message(Command('start'))
 async def start_command(message: Message):
     await message.answer(
@@ -159,7 +158,7 @@ async def help_command(message: Message):
             "🌟 Команды супер-администратора:\n"
             "Чтобы добавить расписание пришлите файл\n"
             "/adda - Добавить администратора\n"
-            "/dela - Удалить администратора\n"
+            "/dela - Удалить администра��ора\n"
             "/lsta - Список администраторов"
         )
     elif is_admin:

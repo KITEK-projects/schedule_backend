@@ -33,6 +33,7 @@ class classes(models.Model):
 
     class Meta:
         db_table = 'classes'
+        ordering = ["number", "title"]
 
     def __str__(self):
         return f"{self.title} (Class {self.number})"

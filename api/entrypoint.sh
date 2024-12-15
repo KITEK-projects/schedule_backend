@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Ждем, пока база данных будет доступна (если используется)
-# python manage.py wait_for_db
 
 python manage.py makemigrations
 
