@@ -3,81 +3,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 
 
-data = []
-
-
-def create_teachers(data):
-    partner_data = []
-    
-    for item in data:
-    
-        client = item['client']
-        for schedule in item['schedule']:
-            date = schedule['date']
-            for classes in schedule['classes']:
-                number = classes['number']
-                title = classes['title']
-                type_ = classes['type']
-                partner = classes['partner']
-                location = classes['location']
-                
-                if partner == None:
-                    continue
-                # Проверяем, есть ли партнер уже в partner_data
-                partner_item = next((p for p in partner_data if p['client'] == partner), None)
-                
-                if partner_item:
-                    # Партнер уже есть, ищем, есть ли расписание на эту дату
-                    schedule_item = next((s for s in partner_item['schedule'] if s['date'] == date), None)
-                    
-                    if schedule_item:
-                        # Добавляем класс в существующее расписание
-                        schedule_item['classes'].append({
-                            'number': number,
-                            'title': title,
-                            'type': type_,
-                            'partner': client,
-                            'location': location
-                        })
-                    else:
-                        # Добавляем новое расписание для этого партнера
-                        partner_item['schedule'].append({
-                            'date': date,
-                            'classes': [{
-                                'number': number,
-                                'title': title,
-                                'type': type_,
-                                'partner': client,
-                                'location': location
-                            }]
-                        })
-                else:
-                    # Если партнера нет, добавляем его с расписанием
-                    partner_data.append({
-                        'client': partner,
-                        'is_teacher': True,
-                        'schedule': [{
-                            'date': date,
-                            'classes': [{
-                                'number': number,
-                                'title': title,
-                                'type': type_,
-                                'partner': client,
-                                'location': location
-                            }]
-                        }]
-                    })
-    
-    # Сортировка расписаний по дате и классов по номеру
-    for partner_item in partner_data:
-        # Сортируем расписания по дате
-        partner_item['schedule'].sort(key=lambda x: x['date'])
-        for schedule_item in partner_item['schedule']:
-            # Сортируем классы по номеру занятия
-            schedule_item['classes'].sort(key=lambda x: x['number'])
-    
-    return partner_data
-    
+data = []    
 
 def html_parse(src):
     soup = BeautifulSoup(src, "lxml")
@@ -130,24 +56,42 @@ def html_parse(src):
                 })
                 continue
 
-            if len(tds) == 3:
-                tds_info = [tds]
-            elif len(tds) == 6:
-                tds_info = [tds[0:3], tds[3:6]]
+            tds_info = [tds]
                 
             
             for i in tds_info:
                 if i[0] != "":
-                    class_info= {
-                        'number': number,
-                        'title': i[0].capitalize(),
-                        'type': i[1].strip('()'),
-                        'partner': i[2],
-                        'location': location
-                    }
+                    if len(i) == 3:
+                        class_info = [
+                                {
+                                    'number': number,
+                                    'title': i[0].capitalize(),
+                                    'type': i[1].strip('()'),
+                                    'partner': i[2],
+                                    'location': location
+                                }
+                            ]
+                    elif len(i) == 6:
+                        class_info = [
+                                {
+                                    'number': number,
+                                    'title': i[0].capitalize(),
+                                    'type': i[1].strip('()'),
+                                    'partner': i[2],
+                                    'location': location
+                                },
+                                {
+                                    'number': number,
+                                    'title': i[3].capitalize(),
+                                    'type': i[4].strip('()'),
+                                    'partner': i[5],
+                                    'location': location
+                                }
+                            ]
+
+                    
                     if schedule and schedule[-1]['date'] == date:
                         schedule[-1]['classes'].append(class_info)
-
                     else:
                         schedule.append({
                             'date': date,
@@ -168,7 +112,7 @@ def html_parse(src):
                 'schedule': schedule
             })
         
-    return data + create_teachers(data)
+    return data 
 
 
 if __name__ == "__main__":
