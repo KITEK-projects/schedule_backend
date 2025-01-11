@@ -3,7 +3,94 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 
 
-data = []    
+data = []
+
+def parse_for_teacher(data, teacher_data=[]):
+    for data_item in data:
+        client = data_item.get("client", None)
+        
+        # Process each schedule item for the current client
+        for schedule_item in data_item.get("schedule", []):
+            date = schedule_item["date"]
+            classes = schedule_item["classes"]
+            
+            # Process each class item in the schedule
+            for classes_item in classes:
+                for class_item in classes_item:
+                    number = class_item["number"]
+                    title = class_item["title"]
+                    _type = class_item["type"]
+                    partner = class_item["partner"]
+                    location = class_item['location']
+
+                    # Find the corresponding teacher based on the partner
+                    new_client = next((obj for obj in teacher_data if obj["client"] == partner), None)
+                    
+                    if new_client:
+                        # Check if the date exists in the teacher's schedule
+                        (new_date, date_index) = next(((obj, i) for i, obj in enumerate(new_client.get("schedule", [])) if obj.get("date") == date), (None, None))
+                        
+                        if new_date:
+                            # Find or create a class entry for this date
+                            (new_classes, classes_index) = next(((obj, i) for i, obj in enumerate(new_date.get("classes", [])) for item in obj if item.get("number") == number), (None, None))
+                            
+                            if new_classes:
+                                # If a class already exists, append new information
+                                new_classes.append({
+                                    "number": number,
+                                    "title": title,
+                                    "type": _type,
+                                    "partner": client,
+                                    "location": location
+                                })
+                            else:
+                                # Create a new class entry if it doesn't exist
+                                new_date["classes"].append([{
+                                    "number": number,
+                                    "title": title,
+                                    "type": _type,
+                                    "partner": client,
+                                    "location": location
+                                }])
+                        else:
+                            # If no date exists, create a new entry
+                            new_client["schedule"].append({
+                                "date": date,
+                                "classes": [[{
+                                    "number": number,
+                                    "title": title,
+                                    "type": _type,
+                                    "partner": client,
+                                    "location": location
+                                }]]
+                            })
+                        
+                        # Update the teacher's schedule with the modified client data
+
+                        teacher_index = next((i for i, obj in enumerate(teacher_data) if obj.get("client") == partner), 0)
+                        teacher_data[teacher_index] = new_client
+
+                    else:
+                        # Create a new client entry if not found
+                        new_teacher_data = {
+                            "client": partner,
+                            "is_teacher": True,
+                            "schedule": [{
+                                "date": date,
+                                "classes": [[{
+                                    "number": number,
+                                    "title": title,
+                                    "type": _type,
+                                    "partner": client,
+                                    "location": location
+                                }]]
+                            }]
+                        }
+                        teacher_data.append(new_teacher_data)
+
+    return teacher_data
+
+
 
 def html_parse(src):
     soup = BeautifulSoup(src, "lxml")
@@ -40,7 +127,7 @@ def html_parse(src):
             location = None
             
             if len(tds_soup) > 1:
-                location = tds_soup[1].get_text().strip("-")
+                location = tds_soup[1].get_text(separator='<br>').split('<br>')
                 if location == "":
                     location = None
 
@@ -68,7 +155,7 @@ def html_parse(src):
                                     'title': i[0].capitalize(),
                                     'type': i[1].strip('()'),
                                     'partner': i[2],
-                                    'location': location
+                                    'location': location[0]
                                 }
                             ]
                     elif len(i) == 6:
@@ -78,14 +165,14 @@ def html_parse(src):
                                     'title': i[0].capitalize(),
                                     'type': i[1].strip('()'),
                                     'partner': i[2],
-                                    'location': location
+                                    'location': location[0]
                                 },
                                 {
                                     'number': number,
                                     'title': i[3].capitalize(),
                                     'type': i[4].strip('()'),
                                     'partner': i[5],
-                                    'location': location
+                                    'location': location[1]
                                 }
                             ]
 
@@ -112,18 +199,18 @@ def html_parse(src):
                 'schedule': schedule
             })
         
-    return data 
+    return data + parse_for_teacher(data)
 
 
-if __name__ == "__main__":
-    # Читаем HTML файл
-    with open("16дек-главное.html", "r", encoding="windows-1251") as file:
-        html_content = file.read()
+# if __name__ == "__main__":
+#     # Читаем HTML файл
+#     with open("16дек-главное.html", "r", encoding="windows-1251") as file:
+#         html_content = file.read()
     
-    # Получаем результат парсинга
-    result = html_parse(html_content)
+#     # Получаем результат парсинга
+#     result = html_parse(html_content)
     
-    # Сохраняем результат в JSON файл
-    with open("scheduleYA.json", "w", encoding="utf-8") as file:
-        json.dump(result, file, ensure_ascii=False, indent=4)
+#     # Сохраняем результат в JSON файл
+#     with open("scheduleYA.json", "w", encoding="utf-8") as file:
+#         json.dump(result, file, ensure_ascii=False, indent=4)
 

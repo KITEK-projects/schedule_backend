@@ -1,17 +1,23 @@
 from rest_framework import serializers
 from .models import *
 
-class ClassesSerializer(serializers.ModelSerializer):
+class ItemLessonSerializer(serializers.ModelSerializer):
     class Meta:
-        model = classes
-        fields = ['number', 'title', 'type', 'partner', 'location']
+        model = ItemLesson
+        fields = ['title', "type", "partner", "location"]
 
+class LessonSerializer(serializers.ModelSerializer):
+    item_lesson = ItemLessonSerializer(many=True)
+
+    class Meta:
+        model = Lesson
+        fields = ['number', "item_lesson"]
 
 class SchedulesSerializer(serializers.ModelSerializer):
-    classes = ClassesSerializer(many=True)  # Используем related_name 'classes'
+    lesson = LessonSerializer(many=True)
 
     class Meta:
-        model = schedules
+        model = Schedule
         fields = ['date', 'classes']
 
 
@@ -19,7 +25,7 @@ class ClientsSerializer(serializers.ModelSerializer):
     schedule = SchedulesSerializer(many=True, source='schedules')  # Используем related_name 'schedules'
 
     class Meta:
-        model = clients
+        model = Client
         fields = ['client_name', 'is_teacher', 'schedule']
 
 

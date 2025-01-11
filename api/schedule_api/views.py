@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework import status
-from .models import clients, schedules, Users
+from .models import Client, Schedule, Users
 from rest_framework.generics import get_object_or_404
 from .serializers import UsersSerializer
 
@@ -36,10 +36,10 @@ class ScheduleApiView(APIView):
         
         try:
             # Находим клиента по имени
-            client = clients.objects.get(client_name=client_name)
+            client = Client.objects.get(client_name=client_name)
             
             # Получаем расписания клиента начиная с даты из запроса
-            schedules_list = schedules.objects.filter(client=client, date__gte=request_date)
+            schedules_list = Schedule.objects.filter(client=client, date__gte=request_date)
             
             if schedules_list.exists():
                 # Если есть расписания, сериализуем их
@@ -49,23 +49,31 @@ class ScheduleApiView(APIView):
                 }
                 for schedule in schedules_list:
                     # Для каждого расписания добавляем информацию о классах
-                    classes_list = schedule.classes.all()
+                    classes_dict = {}
+                    for lesson in schedule.lesson.all():
+                        # Группируем классы по номеру урока
+                        if lesson.number not in classes_dict:
+                            classes_dict[lesson.number] = []
+                        classes_dict[lesson.number].append({
+                            'number': lesson.number,
+                            'title': lesson.item_lesson.title,
+                            'type': lesson.item_lesson.type,
+                            'partner': lesson.item_lesson.partner,
+                            'location': lesson.item_lesson.location,
+                        })
+
+                    # Формируем список классов в нужной структуре
+                    classes_list = list(classes_dict.values())
                     data['schedule'].append({
                         'date': schedule.date,
-                        'classes': [{
-                            'number': c.number,
-                            'title': c.title,
-                            'type': c.type,
-                            'partner': c.partner,
-                            'location': c.location,
-                        } for c in classes_list]
+                        'classes': classes_list
                     })
                 
                 return Response(data)
             else:
                 return Response({'error': "У вас нет расписания"}, status=status.HTTP_404_NOT_FOUND)
         
-        except clients.DoesNotExist:
+        except Client.DoesNotExist:
             return Response({'error': "Клиент не найден"}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -82,7 +90,7 @@ class ClientsApiView(APIView):
                 return Response({'error': 'Параметр is_teacher должен быть true или false'}, 
                                 status=status.HTTP_400_BAD_REQUEST)
 
-            clients_list = clients.objects.filter(is_teacher=is_teacher)
+            clients_list = Client.objects.filter(is_teacher=is_teacher)
             
             if not clients_list.exists():
                 return Response({'error': 'База данных пуста'}, status=status.HTTP_404_NOT_FOUND)
@@ -106,7 +114,7 @@ class ScheduleEditApiView(APIView):
                 client_name = client_data.get("client")
                 is_teacher = client_data.get("is_teacher", False)
 
-                client, _ = clients.objects.get_or_create(
+                client, _ = Client.objects.get_or_create(
                     client_name=client_name,
                     is_teacher=is_teacher
                 )
@@ -117,19 +125,26 @@ class ScheduleEditApiView(APIView):
                     classes_data = schedule_item.get("classes", [])
 
                     # Проверяем, существует ли расписание
-                    existing_schedule, _ = schedules.objects.get_or_create(client=client, date=date)
+                    existing_schedule, _ = Schedule.objects.get_or_create(client=client, date=date)
 
+                    # Создаем или обновляем уроки
                     for class_data in classes_data:
-                        class_item = {
-                            **class_data
-                        }
-                        class_res, _ = classes.objects.update_or_create(
+                        # Создаем или обновляем объект Lesson
+                        lesson, _ = Lesson.objects.get_or_create(
                             schedule=existing_schedule,
-                            number=class_data["number"],
-                            title=class_data["title"],
-                            defaults=class_item,
+                            number=class_data["number"]
                         )
-
+                        # Обновляем или создаем ItemLesson
+                        item_res, _ = ItemLesson.objects.update_or_create(
+                            schedule=lesson,
+                            title=class_data["title"],
+                            defaults={
+                                'type': class_data.get("type"),
+                                'partner': class_data.get("partner"),
+                                'location': class_data.get("location"),
+                            },
+                        )
+                
             return Response({"detail": "Schedules updated successfully."}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -144,13 +159,13 @@ class ScheduleEditApiView(APIView):
                 is_teacher = client_data.get("is_teacher", False)
 
                 # Находим такого в бд
-                client, _ = clients.objects.get_or_create(
+                client, _ = Client.objects.get_or_create(
                     client_name=client_name,
                     is_teacher=is_teacher
                 )
 
                 # Получаем расписания клиента
-                existing_schedules = schedules.objects.filter(client=client)
+                existing_schedules = Schedule.objects.filter(client=client)
 
                 # Перебераем входной json
                 for schedule_item in client_data.get("schedule", []):
