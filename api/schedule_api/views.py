@@ -5,76 +5,96 @@ from rest_framework.response import Response
 from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework import status
-from .models import Client, Schedule, Users
+from .models import Client, Schedule, User
 from rest_framework.generics import get_object_or_404
-from .serializers import UsersSerializer
+from .serializers import UserSerializer
 
 from .models import *
 from .serializers import *
 from .decorators import internal_api
 
+from rest_framework import generics
+from rest_framework import mixins
+
 BOT = 'schedule-bot'
 
 
-class ScheduleApiView(APIView):
-    def get(self, request):
-        client_name = request.query_params.get('client', None)
-        
-        # Извлекаем дату из заголовков
-        request_date_str = request.headers.get('X-CLIENT-TIME', None)  # Формат 2024-10-23T12:50:16.999Z
-        
-        if request_date_str:
-            try:
-                # Пытается парсить дату из стринга
-                request_date = datetime.fromisoformat(request_date_str).date()
-            except:
-                # В случае ощибки берет дату сервера
-                request_date = datetime.today().date()
-        else:
-            # Если дата не указана, используем дату сервера
-            request_date = datetime.today().date()
-        
-        try:
-            # Находим клиента по имени
-            client = Client.objects.get(client_name=client_name)
-            
-            # Получаем расписания клиента начиная с даты из запроса
-            schedules_list = Schedule.objects.filter(client=client, date__gte=request_date)
-            
-            if schedules_list.exists():
-                # Если есть расписания, сериализуем их
-                data = {
-                    'client': client.client_name,
-                    'schedule': []
-                }
-                for schedule in schedules_list:
-                    # Для каждого расписания добавляем информацию о классах
-                    classes_dict = {}
-                    for lesson in schedule.lesson.all():
-                        # Группируем классы по номеру урока
-                        if lesson.number not in classes_dict:
-                            classes_dict[lesson.number] = []
-                        classes_dict[lesson.number].append({
-                            'number': lesson.number,
-                            'title': lesson.item_lesson.title,
-                            'type': lesson.item_lesson.type,
-                            'partner': lesson.item_lesson.partner,
-                            'location': lesson.item_lesson.location,
-                        })
+# class ScheduleApiView(generics.ListAPIView):
+#     queryset = Client.objects.all()
+#     serializer_class = UsersSerializer
+    
+class ScheduleApiView(mixins.ListModelMixin, 
+                      mixins.CreateModelMixin, 
+                      generics.GenericAPIView):
+    queryset = Client.objects.all()
+    serializer_class = ClientSerializer
+    
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
-                    # Формируем список классов в нужной структуре
-                    classes_list = list(classes_dict.values())
-                    data['schedule'].append({
-                        'date': schedule.date,
-                        'classes': classes_list
-                    })
-                
-                return Response(data)
-            else:
-                return Response({'error': "У вас нет расписания"}, status=status.HTTP_404_NOT_FOUND)
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+# class ScheduleApiView(APIView):
+#     def get(self, request):
+#         client_name = request.query_params.get('client', None)
         
-        except Client.DoesNotExist:
-            return Response({'error': "Клиент не найден"}, status=status.HTTP_400_BAD_REQUEST)
+#         # Извлекаем дату из заголовков
+#         request_date_str = request.headers.get('X-CLIENT-TIME', None)  # Формат 2024-10-23T12:50:16.999Z
+        
+#         if request_date_str:
+#             try:
+#                 # Пытается парсить дату из стринга
+#                 request_date = datetime.fromisoformat(request_date_str).date()
+#             except:
+#                 # В случае ощибки берет дату сервера
+#                 request_date = datetime.today().date()
+#         else:
+#             # Если дата не указана, используем дату сервера
+#             request_date = datetime.today().date()
+        
+#         try:
+#             # Находим клиента по имени
+#             client = Client.objects.get(client_name=client_name)
+            
+#             # Получаем расписания клиента начиная с даты из запроса
+#             schedules_list = Schedule.objects.filter(client=client, date__gte=request_date)
+            
+#             if schedules_list.exists():
+#                 # Если есть расписания, сериализуем их
+#                 data = {
+#                     'client': client.client_name,
+#                     'schedule': []
+#                 }
+#                 for schedule in schedules_list:
+#                     # Для каждого расписания добавляем информацию о классах
+#                     classes_dict = {}
+#                     for lesson in schedule.lesson.all():
+#                         # Группируем классы по номеру урока
+#                         if lesson.number not in classes_dict:
+#                             classes_dict[lesson.number] = []
+#                         classes_dict[lesson.number].append({
+#                             'number': lesson.number,
+#                             'title': lesson.item_lesson.title,
+#                             'type': lesson.item_lesson.type,
+#                             'partner': lesson.item_lesson.partner,
+#                             'location': lesson.item_lesson.location,
+#                         })
+
+#                     # Формируем список классов в нужной структуре
+#                     classes_list = list(classes_dict.values())
+#                     data['schedule'].append({
+#                         'date': schedule.date,
+#                         'classes': classes_list
+#                     })
+                
+#                 return Response(data)
+#             else:
+#                 return Response({'error': "У вас нет расписания"}, status=status.HTTP_404_NOT_FOUND)
+        
+#         except Client.DoesNotExist:
+#             return Response({'error': "Клиент не найден"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ClientsApiView(APIView):
@@ -187,19 +207,19 @@ class UsersApiView(APIView):
     @internal_api
     def get(self, request, user_id=None):
         if user_id:
-            user = get_object_or_404(Users, user_id=user_id)
+            user = get_object_or_404(User, user_id=user_id)
             if user.is_admin:
                 return Response({'is_admin': True, "is_super_admin": user.is_super_admin}, status=status.HTTP_200_OK)
             return Response({'is_admin': False, "is_super_admin": user.is_super_admin}, status=status.HTTP_200_OK)
         
         # Если user_id не передан, возвращаем список всех пользователей
-        all_users = Users.objects.all()
-        serializer = UsersSerializer(all_users, many=True)
+        all_users = User.objects.all()
+        serializer = UserSerializer(all_users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     @internal_api
     def post(self, request):
-        serializer = UsersSerializer(data=request.data)
+        serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -207,8 +227,8 @@ class UsersApiView(APIView):
 
     @internal_api
     def put(self, request, user_id):
-        user = get_object_or_404(Users, user_id=user_id)
-        serializer = UsersSerializer(user, data=request.data, partial=True)
+        user = get_object_or_404(User, user_id=user_id)
+        serializer = UserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -216,7 +236,7 @@ class UsersApiView(APIView):
 
     @internal_api
     def delete(self, request, user_id):
-        user = get_object_or_404(Users, user_id=user_id)
+        user = get_object_or_404(User, user_id=user_id)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
         

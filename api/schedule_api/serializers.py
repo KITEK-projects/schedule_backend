@@ -4,32 +4,60 @@ from .models import *
 class ItemLessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemLesson
-        fields = ['title', "type", "partner", "location"]
+        fields = ['title', 'type', 'partner', 'location']
 
 class LessonSerializer(serializers.ModelSerializer):
-    item_lesson = ItemLessonSerializer(many=True)
+    items = ItemLessonSerializer(many=True)
 
     class Meta:
         model = Lesson
-        fields = ['number', "item_lesson"]
+        fields = ['number', 'items']
 
-class SchedulesSerializer(serializers.ModelSerializer):
-    lesson = LessonSerializer(many=True)
+class ScheduleSerializer(serializers.ModelSerializer):
+    lessons = LessonSerializer(many=True)
 
     class Meta:
         model = Schedule
-        fields = ['date', 'classes']
+        fields = ['date', 'lessons']
 
-
-class ClientsSerializer(serializers.ModelSerializer):
-    schedule = SchedulesSerializer(many=True, source='schedules')  # Используем related_name 'schedules'
+class ClientSerializer(serializers.ModelSerializer):
+    schedules = ScheduleSerializer(many=True)
 
     class Meta:
         model = Client
-        fields = ['client_name', 'is_teacher', 'schedule']
+        fields = ['client_name', 'is_teacher', 'schedules']
+        
+    def create(self, validated_data):
+        schedules_data = validated_data.pop('schedules', [])
+        
+        client_name = validated_data.get('client_name')
+        client, created = Client.objects.get_or_create(client_name=client_name)
+
+        if not created:
+            client.is_teacher = validated_data.get('is_teacher', client.is_teacher)
+            client.save()
+
+        for schedule_data in schedules_data:
+            lessons_data = schedule_data.pop('lessons', [])
+            schedule_date = schedule_data['date']
+
+            schedule, _ = Schedule.objects.get_or_create(client=client, date=schedule_date)
+
+            for lesson_data in lessons_data:
+                items_data = lesson_data.pop('items', [])
+                lesson_number = lesson_data['number']
+
+                lesson, _ = Lesson.objects.get_or_create(schedule=schedule, number=lesson_number)
+
+                for item_data in items_data:
+                    ItemLesson.objects.create(lesson=lesson, **item_data)
+
+        return client
 
 
-class UsersSerializer(serializers.ModelSerializer):
+
+
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Users
+        model = User
         fields = ['user_id', 'is_admin', 'name', 'is_super_admin']

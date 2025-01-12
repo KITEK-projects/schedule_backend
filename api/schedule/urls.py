@@ -16,8 +16,6 @@ Including another URLconf
 """
 from django.urls import path, include
 
-from schedule_api.views import ScheduleApiView, ClientsApiView
-
 
 urlpatterns = [
     path('v1/', include('schedule_api.urls'))
