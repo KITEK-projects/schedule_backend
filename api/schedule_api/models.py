@@ -3,7 +3,7 @@ from django.db import models
     
 class Client(models.Model):
     client_name = models.CharField(max_length=255)
-    is_teacher = models.BooleanField()
+    is_teacher = models.BooleanField(default=False)
 
 class Schedule(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='schedules')

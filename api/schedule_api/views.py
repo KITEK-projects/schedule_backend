@@ -24,7 +24,8 @@ BOT = 'schedule-bot'
 #     serializer_class = UsersSerializer
     
 class ScheduleApiView(mixins.ListModelMixin, 
-                      mixins.CreateModelMixin, 
+                      mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin, 
                       generics.GenericAPIView):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
@@ -34,7 +35,9 @@ class ScheduleApiView(mixins.ListModelMixin,
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
-
+    
+    def delete(self, request, *args, **kwargs):
+        return ClientSerializer.destroy(request, *args, **kwargs)
 
 # class ScheduleApiView(APIView):
 #     def get(self, request):
