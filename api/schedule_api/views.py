@@ -25,7 +25,6 @@ BOT = 'schedule-bot'
     
 class ScheduleApiView(mixins.ListModelMixin, 
                       mixins.CreateModelMixin,
-                      mixins.DestroyModelMixin, 
                       generics.GenericAPIView):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
@@ -36,69 +35,14 @@ class ScheduleApiView(mixins.ListModelMixin,
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
     
-    def delete(self, request, *args, **kwargs):
-        return ClientSerializer.destroy(request, *args, **kwargs)
-
-# class ScheduleApiView(APIView):
-#     def get(self, request):
-#         client_name = request.query_params.get('client', None)
+    def delete(self, request):
+        serializer = self.get_serializer(data=request.data)
         
-#         # Извлекаем дату из заголовков
-#         request_date_str = request.headers.get('X-CLIENT-TIME', None)  # Формат 2024-10-23T12:50:16.999Z
+        if serializer.is_valid():
+            client = serializer.destroy(serializer.validated_data)
+            return Response({'message': 'Удаление выполнено!'}, status=status.HTTP_204_NO_CONTENT)
         
-#         if request_date_str:
-#             try:
-#                 # Пытается парсить дату из стринга
-#                 request_date = datetime.fromisoformat(request_date_str).date()
-#             except:
-#                 # В случае ощибки берет дату сервера
-#                 request_date = datetime.today().date()
-#         else:
-#             # Если дата не указана, используем дату сервера
-#             request_date = datetime.today().date()
-        
-#         try:
-#             # Находим клиента по имени
-#             client = Client.objects.get(client_name=client_name)
-            
-#             # Получаем расписания клиента начиная с даты из запроса
-#             schedules_list = Schedule.objects.filter(client=client, date__gte=request_date)
-            
-#             if schedules_list.exists():
-#                 # Если есть расписания, сериализуем их
-#                 data = {
-#                     'client': client.client_name,
-#                     'schedule': []
-#                 }
-#                 for schedule in schedules_list:
-#                     # Для каждого расписания добавляем информацию о классах
-#                     classes_dict = {}
-#                     for lesson in schedule.lesson.all():
-#                         # Группируем классы по номеру урока
-#                         if lesson.number not in classes_dict:
-#                             classes_dict[lesson.number] = []
-#                         classes_dict[lesson.number].append({
-#                             'number': lesson.number,
-#                             'title': lesson.item_lesson.title,
-#                             'type': lesson.item_lesson.type,
-#                             'partner': lesson.item_lesson.partner,
-#                             'location': lesson.item_lesson.location,
-#                         })
-
-#                     # Формируем список классов в нужной структуре
-#                     classes_list = list(classes_dict.values())
-#                     data['schedule'].append({
-#                         'date': schedule.date,
-#                         'classes': classes_list
-#                     })
-                
-#                 return Response(data)
-#             else:
-#                 return Response({'error': "У вас нет расписания"}, status=status.HTTP_404_NOT_FOUND)
-        
-#         except Client.DoesNotExist:
-#             return Response({'error': "Клиент не найден"}, status=status.HTTP_400_BAD_REQUEST)
-
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ClientsApiView(APIView):
     def get(self, request):

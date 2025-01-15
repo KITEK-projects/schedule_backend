@@ -40,13 +40,14 @@ class ClientSerializer(serializers.ModelSerializer):
         for schedule_data in schedules_data:
             lessons_data = schedule_data.pop('lessons', [])
             schedule_date = schedule_data['date']
-
+            
             schedule, _ = Schedule.objects.get_or_create(client=client, date=schedule_date)
 
             for lesson_data in lessons_data:
                 items_data = lesson_data.pop('items', [])
                 lesson_number = lesson_data['number']
-
+                
+                Lesson.objects.filter(schedule=schedule, number=lesson_number).delete()
                 lesson, _ = Lesson.objects.get_or_create(schedule=schedule, number=lesson_number)
 
                 for item_data in items_data:
