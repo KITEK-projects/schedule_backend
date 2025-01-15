@@ -23,17 +23,32 @@ BOT = 'schedule-bot'
 #     queryset = Client.objects.all()
 #     serializer_class = UsersSerializer
     
-class ScheduleApiView(mixins.ListModelMixin, 
-                      mixins.CreateModelMixin,
+class ScheduleApiView(mixins.CreateModelMixin,
                       generics.GenericAPIView):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
     
+    
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        client_name = request.GET.get('client_name')
+
+        queryset = self.queryset
+        
+        if client_name:
+            try:
+                queryset = queryset.get(client_name=client_name)
+            except Client.DoesNotExist:
+                return Response({'detail': 'Client not found.'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'detail': 'Нужен client_name'}, status=status.HTTP_400_BAD_REQUEST)
+                
+        serializer = self.get_serializer(queryset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+    
     
     def delete(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -43,6 +58,7 @@ class ScheduleApiView(mixins.ListModelMixin,
             return Response({'message': 'Удаление выполнено!'}, status=status.HTTP_204_NO_CONTENT)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 class ClientsApiView(APIView):
     def get(self, request):
