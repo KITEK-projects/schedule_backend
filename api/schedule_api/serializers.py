@@ -47,7 +47,7 @@ class ClientSerializer(serializers.ModelSerializer):
                 items_data = lesson_data.pop('items', [])
                 lesson_number = lesson_data['number']
                 
-                Lesson.objects.filter(schedule=schedule, number=lesson_number).delete()
+                Lesson.objects.filter(schedule=schedule).delete()
                 lesson, _ = Lesson.objects.get_or_create(schedule=schedule, number=lesson_number)
 
                 for item_data in items_data:
