@@ -1,20 +1,16 @@
-import json
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from datetime import datetime
-from rest_framework.views import APIView
-from rest_framework import status
-from .models import Client, Schedule, User
+from django.utils.dateparse import parse_datetime
+
 from rest_framework.generics import get_object_or_404
-from .serializers import UserSerializer
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework import mixins
+from rest_framework import generics
 
 from .models import *
 from .serializers import *
 from .decorators import internal_api
 
-from rest_framework import generics
-from rest_framework import mixins
 
 BOT = 'schedule-bot'
 
@@ -31,19 +27,38 @@ class ScheduleApiView(mixins.CreateModelMixin,
     
     def get(self, request, *args, **kwargs):
         client_name = request.GET.get('client_name')
+        x_client_time = request.headers.get('x-client-time')
 
         queryset = self.queryset
         
-        if client_name:
+        if client_name and x_client_time:
             try:
                 queryset = queryset.get(client_name=client_name)
+                client_time = parse_datetime(x_client_time)
+
+                if client_time is None:
+                    return Response({"error": "Invalid date format."}, status=status.HTTP_400_BAD_REQUEST)
+                
+                date_to_filter = client_time.date()
+                filtered_schedules = queryset.schedules.filter(date__gte=date_to_filter)
+
+                # Serialize the filtered schedules
+                schedule_serializer = ScheduleSerializer(filtered_schedules, many=True)
+
+                # Prepare the response data
+                response_data = {
+                    "client": queryset.client_name,
+                    'is_teacher': queryset.is_teacher,
+                    "schedules": schedule_serializer.data
+                }
+
+                return Response(response_data, status=status.HTTP_200_OK)
+            
             except Client.DoesNotExist:
                 return Response({'detail': 'Client not found.'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            return Response({'detail': 'Нужен client_name'}, status=status.HTTP_400_BAD_REQUEST)
-                
-        serializer = self.get_serializer(queryset)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({'detail': 'Нужен client_name(query) or x_client_time(header)'}, status=status.HTTP_400_BAD_REQUEST)
+
     
     @internal_api
     def post(self, request, *args, **kwargs):
