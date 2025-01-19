@@ -31,27 +31,24 @@ class ClientSerializer(serializers.ModelSerializer):
         schedules_data = validated_data.pop('schedules', [])
         
         client_name = validated_data.get('client_name')
-        client, created = Client.objects.get_or_create(client_name=client_name)
-
-        if not created:
-            client.is_teacher = validated_data.get('is_teacher', client.is_teacher)
-            client.save()
+        is_teacher = validated_data.get('is_teacher')
+        client, created = Client.objects.get_or_create(client_name=client_name, is_teacher=is_teacher)
 
         for schedule_data in schedules_data:
             lessons_data = schedule_data.pop('lessons', [])
             schedule_date = schedule_data['date']
             
             schedule, _ = Schedule.objects.get_or_create(client=client, date=schedule_date)
-
+            
+            Lesson.objects.filter(schedule=schedule).delete()
             for lesson_data in lessons_data:
                 items_data = lesson_data.pop('items', [])
                 lesson_number = lesson_data['number']
                 
-                Lesson.objects.filter(schedule=schedule).delete()
                 lesson, _ = Lesson.objects.get_or_create(schedule=schedule, number=lesson_number)
-
+                
+                ItemLesson.objects.filter(lesson=lesson).delete()
                 for item_data in items_data:
-                    ItemLesson.objects.filter(lesson=lesson).delete()
                     item_lesson, created = ItemLesson.objects.get_or_create(lesson=lesson, **item_data)
 
         return client

@@ -8,6 +8,9 @@ class Client(models.Model):
 class Schedule(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='schedules')
     date = models.DateField()
+    
+    class Meta:
+        ordering = ['date']
 
 class Lesson(models.Model):
     schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name='lessons')

@@ -64,35 +64,42 @@ class ScheduleApiView(mixins.CreateModelMixin,
     def post(self, request, *args, **kwargs):
         data = request.data
         
-        # Если данные - это список
-        if isinstance(data, list):
-            # Сериализуем данные
-            serializer = self.get_serializer(data=data, many=True)
-            if serializer.is_valid():
-                # Сохраняем все объекты
-                clients = serializer.save()
-                return Response(self.get_serializer(clients, many=True).data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        # Если данные - это один объект
-        serializer = self.get_serializer(data=data)
+        serializer = self.get_serializer(data=data, many=True)
         if serializer.is_valid():
-            client = serializer.save()
-            return Response(self.get_serializer(client).data, status=status.HTTP_201_CREATED)
-
+            clients = serializer.save()
+            return Response(self.get_serializer(clients, many=True).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({"error": "Invalid data format."}, status=status.HTTP_400_BAD_REQUEST)
     
     @internal_api
     def delete(self, request):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, many=True)
         
         if serializer.is_valid():
-            serializer.destroy(serializer.validated_data)
+            for item in serializer.validated_data:
+                client_name = item.get('client_name')
+                schedules_data = item.get('schedules', [])
+                
+                try:
+                    client = Client.objects.get(client_name=client_name)
+                    for schedule_data in schedules_data:
+                        schedule_date = schedule_data['date']
+                        try:
+                            schedule = Schedule.objects.get(client=client, date=schedule_date)
+                            schedule.delete()
+                        except Schedule.DoesNotExist:
+                            continue 
+
+                    if not Schedule.objects.filter(client=client).exists():
+                        client.delete()
+                        
+                except Client.DoesNotExist:
+                    continue
+
             return Response({'message': 'Удаление выполнено!'}, status=status.HTTP_204_NO_CONTENT)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-
-
 
 class ClientsApiView(APIView):
     def get(self, request):
@@ -130,7 +137,6 @@ class UsersApiView(APIView):
                 return Response({'is_admin': True, "is_super_admin": user.is_super_admin}, status=status.HTTP_200_OK)
             return Response({'is_admin': False, "is_super_admin": user.is_super_admin}, status=status.HTTP_200_OK)
         
-        # Если user_id не передан, возвращаем список всех пользователей
         all_users = User.objects.all()
         serializer = UserSerializer(all_users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

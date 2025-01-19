@@ -100,19 +100,17 @@ async def edit_schedule(callback: CallbackQuery):
             
             # Основной запрос на изменение расписания
             if current_state == "add":
-                endpoint = "edit/"
-                method = session.put
+                method = session.post
             else:
-                endpoint = "edit/"
                 method = session.delete
 
-            async with method(API + endpoint, json=payload,
+            async with method(API + 'schedule/', json=payload,
                 headers={
                     'Content-Type': 'application/json',
                     'X-Internal-Token': os.getenv('INTERNAL_API_TOKEN'),
                 }
             ) as response:
-                if response.status == 200:
+                if response.status < 300:
                     await callback.message.answer(f"Расписание {action_type} успешно")
                     
                     # Отправляем уведомление всем суперадминам, кроме инициатора
