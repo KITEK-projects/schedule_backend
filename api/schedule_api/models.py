@@ -15,6 +15,9 @@ class Schedule(models.Model):
 class Lesson(models.Model):
     schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name='lessons')
     number = models.IntegerField()
+    
+    class Meta:
+        ordering = ['number']
 
 class ItemLesson(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='items')
@@ -22,6 +25,7 @@ class ItemLesson(models.Model):
     type = models.CharField(max_length=50)
     partner = models.CharField(max_length=255)
     location = models.CharField(max_length=50)
+    
     
 
 class User(models.Model):

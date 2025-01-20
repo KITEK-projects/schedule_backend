@@ -10,12 +10,11 @@ import aiohttp
 
 
 from .parser import html_parse 
-from .keyboards import action_selection, start_keyboard, cancel_keyboard
+from .keyboards import action_selection, start_keyboard
 
 router = Router()
 
-# API = "http://schedule-api:8000/v1/"
-API = "http://localhost:8000/v1/"
+API = "http://schedule-api:8000/v1/"
 
 document = None
 file_id = ""
@@ -94,8 +93,11 @@ async def edit_schedule(callback: CallbackQuery):
                 if response.status == 200:
                     admins = await response.json()
                     super_admins = [admin['user_id'] for admin in admins if admin.get('is_super_admin')]
-
-            payload = html_parse(src)
+                    
+            try:
+                payload = html_parse(src)
+            except Exception as e:
+                await callback.message.answer("Ошибка парсера")
             action_type = "добавлено" if current_state == "add" else "удалено"
             
             # Основной запрос на изменение расписания

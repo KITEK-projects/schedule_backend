@@ -22,7 +22,7 @@ paths:
         - name: X-CLIENT-TIME
           in: header
           required: False
-          description: Дата с которой будет получен ответ от сервера(format - iso8601).(Если в этой датe - нет расписания, показывает только то что есть в базе после этой даты)
+          description: Дата с которой будет получен ответ от сервера(format - iso8601).(Без этого параметра выдает ошибку)
           schema:
             type: string
             example: 20210411T010000+0600
@@ -97,10 +97,10 @@ paths:
 
 components:
   schemas:
-    ClientSchedule:
+    Schedule:
       type: object
       properties:
-        client_name:
+        client:
           type: string
           example: "ПКД-21"
         is_teacher:
@@ -139,7 +139,7 @@ components:
                             example: "Савельева Ю. С."
                           location:
                             type: string
-                            example: "-"
+                            example: "13"
     Clients:
       type: array
       items:

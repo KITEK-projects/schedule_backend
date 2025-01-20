@@ -8,5 +8,5 @@ urlpatterns = [
     path('clients/', views.ClientsApiView.as_view()),
     path('users/', views.UsersApiView.as_view(), name='users-create'),
     path('users/<str:user_id>/', views.UsersApiView.as_view(), name='users-detail'),
-    path('admin/', admin.site.urls)
+    # path('admin/', admin.site.urls)
 ]
