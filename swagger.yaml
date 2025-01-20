@@ -94,46 +94,52 @@ paths:
                   error:
                     type: string
                     example: В базе данных нет расписания, она пуста.
-  
+
 components:
   schemas:
-    Schedule:
+    ClientSchedule:
       type: object
-      required:
-        - client
-        - schedule
       properties:
-        client:
+        client_name:
           type: string
-          example: ОО-31
-        schedule:
+          example: "ПКД-21"
+        is_teacher:
+          type: boolean
+          example: false
+        schedules:
           type: array
           items:
             type: object
             properties:
               date:
                 type: string
-                example: 2021-10-12
-              classes:
+                format: date
+                example: "2024-12-16"
+              lessons:
                 type: array
                 items:
                   type: object
                   properties:
                     number:
-                      type: number
-                      example: 4
-                    title:
-                      type: string
-                      example: организация и технология производства продукции оп.
-                    type:
-                      type: string
-                      example: модуль 1
-                    partner: 
-                      type: string
-                      example: Коптева Л. С.
-                    location:
-                      type: string
-                      example: 12
+                      type: integer
+                      example: 3
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          title:
+                            type: string
+                            example: "Мдк.01.02."
+                          type:
+                            type: string
+                            example: "лекция"
+                          partner:
+                            type: string
+                            example: "Савельева Ю. С."
+                          location:
+                            type: string
+                            example: "-"
     Clients:
       type: array
       items:

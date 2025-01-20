@@ -66,7 +66,7 @@ async def cancel(callback: CallbackQuery):
 async def edit_schedule(callback: CallbackQuery):
     await callback.answer()
     await callback.message.delete()
-    await callback.message.answer("Обработка...")
+    await callback.message.answer("Обработка запроса(может занят около 3-х минут)...")
     # Получаем информацию о файле
     file_info = await callback.message.bot.get_file(file_id)
 
