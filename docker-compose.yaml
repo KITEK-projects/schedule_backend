@@ -64,5 +64,6 @@ services:
 
 networks:
   schedule:
+    external: true
     name: schedule
     driver: bridge
