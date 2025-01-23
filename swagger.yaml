@@ -50,7 +50,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  detail:
                     type: string
                     example: У вас нет расписания
   /clients/:

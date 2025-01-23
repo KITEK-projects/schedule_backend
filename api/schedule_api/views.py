@@ -51,6 +51,9 @@ class ScheduleApiView(mixins.CreateModelMixin,
                     'is_teacher': queryset.is_teacher,
                     "schedules": schedule_serializer.data
                 }
+                
+                if response_data['schedules'] == []:
+                    return Response({"detail": "У вас нет расписания"}, status=status.HTTP_404_NOT_FOUND)
 
                 return Response(response_data, status=status.HTTP_200_OK)
             
