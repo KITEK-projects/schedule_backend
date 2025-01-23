@@ -12,20 +12,20 @@ paths:
       tags:
         - Schedule
       parameters:
-        - name: client
+        - name: client_name
           in: query
           required: true
           description: Имя клиента, для которого нужно получить расписание
           schema:
             type: string
-            example: ОО-31
+            example: ИСР-22
         - name: X-CLIENT-TIME
           in: header
           required: False
           description: Дата с которой будет получен ответ от сервера(format - iso8601).(Без этого параметра выдает ошибку)
           schema:
             type: string
-            example: 20210411T010000+0600
+            example: 2021-01-12T22:47:25+06:00
       responses:
         '200':
           description: Отправляет расписание
@@ -34,17 +34,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/Schedule"
         '400':
-          description: Клиент не найден либо не указан
+          description: client_name или x-client-time не указан
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  error:
+                  detail:
                     type: string
-                    example: Клиент не найден
+                    example: Нужен client_name(query)
         '404':
-          description: Расписание не найдено по времени переданому в хедер(если время не указано time берется с сервера)
+          description: Нет расписания
           content:
             application/json:
               schema:
@@ -100,7 +100,7 @@ components:
     Schedule:
       type: object
       properties:
-        client:
+        client_name:
           type: string
           example: "ПКД-21"
         is_teacher:

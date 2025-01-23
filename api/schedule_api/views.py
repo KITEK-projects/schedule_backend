@@ -47,7 +47,7 @@ class ScheduleApiView(mixins.CreateModelMixin,
 
                 # Prepare the response data
                 response_data = {
-                    "client": queryset.client_name,
+                    "client_name": queryset.client_name,
                     'is_teacher': queryset.is_teacher,
                     "schedules": schedule_serializer.data
                 }
@@ -57,8 +57,10 @@ class ScheduleApiView(mixins.CreateModelMixin,
             except Client.DoesNotExist:
                 return Response({'detail': 'Client not found.'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            return Response({'detail': 'Нужен client_name(query) or x_client_time(header)'}, status=status.HTTP_400_BAD_REQUEST)
-
+            if not client_name:
+                return Response({'detail': 'Нужен client_name(query)'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'detail': 'Нужен x-client-time(header)'}, status=status.HTTP_400_BAD_REQUEST)
     
     @internal_api
     def post(self, request, *args, **kwargs):
@@ -69,8 +71,6 @@ class ScheduleApiView(mixins.CreateModelMixin,
             clients = serializer.save()
             return Response(self.get_serializer(clients, many=True).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        return Response({"error": "Invalid data format."}, status=status.HTTP_400_BAD_REQUEST)
     
     @internal_api
     def delete(self, request):
