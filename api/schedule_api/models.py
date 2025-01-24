@@ -27,7 +27,7 @@ class ItemLesson(models.Model):
     title = models.CharField(max_length=255)
     type = models.CharField(max_length=50)
     partner = models.CharField(max_length=255)
-    location = models.CharField(max_length=50, null=True)
+    location = models.CharField(max_length=50, null=True, blank=True)
     
     
 
