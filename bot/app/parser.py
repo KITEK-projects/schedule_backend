@@ -174,9 +174,8 @@ def html_parse(src):
 
             if len(tds_soup) > 1:
                 location = tds_soup[1].get_text(separator="<br>").split("<br>")
-                if location == "":
-                    location = None
-
+                location = [i.replace("-", "") for i in location]
+                
             # Проверяем, есть ли содержимое в ячейке
             if tds_soup[0].get_text().strip() == "&nbsp;" or not tds:
                 # Если день уже существует, пропускаем
@@ -239,16 +238,16 @@ def html_parse(src):
     return data + parse_for_teacher(data)
 
 
-# if __name__ == "__main__":
-#     import json
+if __name__ == "__main__":
+    import json
 
-#     # Читаем HTML файл
-#     with open("16дек-главное.html", "r", encoding="windows-1251") as file:
-#         html_content = file.read()
+    # Читаем HTML файл
+    with open("16дек-главное.html", "r", encoding="windows-1251") as file:
+        html_content = file.read()
 
-#     # Получаем результат парсинга
-#     result = html_parse(html_content)
+    # Получаем результат парсинга
+    result = html_parse(html_content)
 
-#     # Сохраняем результат в JSON файл
-#     with open("scheduleYA.json", "w", encoding="utf-8") as file:
-#         json.dump(result, file, ensure_ascii=False, indent=4)
+    # Сохраняем результат в JSON файл
+    with open("scheduleYA.json", "w", encoding="utf-8") as file:
+        json.dump(result, file, ensure_ascii=False, indent=4)
