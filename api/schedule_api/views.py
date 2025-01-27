@@ -95,14 +95,14 @@ class ScheduleApiView(mixins.CreateModelMixin,
                             continue 
 
                     if not Schedule.objects.filter(client=client).exists():
-                        client.delete()
-                        
-                except Client.DoesNotExist:
+                        client.delete()    
+                except Exception:
                     continue
 
-            return Response({'message': 'Удаление выполнено!'}, status=status.HTTP_204_NO_CONTENT)
+            return Response({'message': 'Удаление выполнено!'}, status=status.HTTP_202_ACCEPTED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ClientsApiView(APIView):
     def get(self, request):
