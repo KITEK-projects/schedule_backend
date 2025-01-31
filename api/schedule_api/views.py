@@ -7,6 +7,9 @@ from rest_framework import status
 from rest_framework import mixins
 from rest_framework import generics
 
+from .utils import get_dates_between
+from datetime import datetime
+
 from .models import *
 from .serializers import *
 from .decorators import internal_api
@@ -29,42 +32,53 @@ class ScheduleApiView(mixins.CreateModelMixin,
         client_name = request.GET.get('client_name')
         x_client_time = request.headers.get('x-client-time')
 
+        if not client_name:
+            return Response({'detail': 'Нужен client_name(query)'}, status=status.HTTP_400_BAD_REQUEST)
+        if not x_client_time:
+            return Response({'detail': 'Нужен x-client-time(header)'}, status=status.HTTP_400_BAD_REQUEST)
+
         queryset = self.queryset
-        
-        if client_name and x_client_time:
-            try:
-                queryset = queryset.get(client_name=client_name)
-                client_time = parse_datetime(x_client_time)
+        try:
+            queryset = queryset.get(client_name=client_name)
+            client_time = parse_datetime(x_client_time)
 
-                if client_time is None:
-                    return Response({"error": "Invalid date format."}, status=status.HTTP_400_BAD_REQUEST)
-                
-                date_to_filter = client_time.date()
-                filtered_schedules = queryset.schedules.filter(date__gte=date_to_filter)
-
-                # Serialize the filtered schedules
-                schedule_serializer = ScheduleSerializer(filtered_schedules, many=True)
-
-                # Prepare the response data
-                response_data = {
-                    "client_name": queryset.client_name,
-                    'is_teacher': queryset.is_teacher,
-                    "schedules": schedule_serializer.data
-                }
-                
-                if response_data['schedules'] == []:
-                    return Response({"detail": "У вас нет расписания"}, status=status.HTTP_404_NOT_FOUND)
-
-                return Response(response_data, status=status.HTTP_200_OK)
+            if client_time is None:
+                return Response({"error": "Invalid date format."}, status=status.HTTP_400_BAD_REQUEST)
             
-            except Client.DoesNotExist:
-                return Response({'detail': 'Client not found.'}, status=status.HTTP_404_NOT_FOUND)
-        else:
-            if not client_name:
-                return Response({'detail': 'Нужен client_name(query)'}, status=status.HTTP_400_BAD_REQUEST)
+            date_to_filter = client_time.date()
+            filtered_schedules = queryset.schedules.filter(date__gte=date_to_filter)
+            schedule_serializer = ScheduleSerializer(filtered_schedules, many=True)
+
+
+            response_data = {
+                "client_name": queryset.client_name,
+                'is_teacher': queryset.is_teacher,
+                "schedules": schedule_serializer.data
+            }
+
+            if response_data['schedules']:
+                end_date_str = response_data['schedules'][-1]['date']
             else:
-                return Response({'detail': 'Нужен x-client-time(header)'}, status=status.HTTP_400_BAD_REQUEST)
+                end_date_str = date_to_filter.isoformat()
+
+            
+            date_array = get_dates_between(x_client_time, end_date_str)
+            existing_dates = {schedule['date'] for schedule in response_data['schedules']}
+            for date in date_array:
+                if date not in existing_dates:
+                    response_data['schedules'].append({
+                        'date': date,
+                        'lessons': []
+                    })
+            response_data['schedules'].sort(key=lambda x: x['date'])
     
+            return Response(response_data, status=status.HTTP_200_OK)
+        except Client.DoesNotExist:
+            return Response({'detail': 'Client not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'ERROR': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
     @internal_api
     def post(self, request, *args, **kwargs):
         data = request.data
