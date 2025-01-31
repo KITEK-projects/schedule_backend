@@ -7,9 +7,6 @@ from rest_framework import status
 from rest_framework import mixins
 from rest_framework import generics
 
-from .utils import get_dates_between
-from datetime import datetime
-
 from .models import *
 from .serializers import *
 from .decorators import internal_api
@@ -49,28 +46,23 @@ class ScheduleApiView(mixins.CreateModelMixin,
             filtered_schedules = queryset.schedules.filter(date__gte=date_to_filter)
             schedule_serializer = ScheduleSerializer(filtered_schedules, many=True)
 
-
-            response_data = {
-                "client_name": queryset.client_name,
-                'is_teacher': queryset.is_teacher,
-                "schedules": schedule_serializer.data
-            }
-
-            if response_data['schedules']:
-                end_date_str = response_data['schedules'][-1]['date']
+            if schedule_serializer.data == []:
+                response_data = {
+                    "client_name": queryset.client_name,
+                    'is_teacher': queryset.is_teacher,
+                    "schedules": [
+                        {
+                            "date": date_to_filter.isoformat(),
+                            "lessons": []
+                        }
+                    ]
+                }
             else:
-                end_date_str = date_to_filter.isoformat()
-
-            
-            date_array = get_dates_between(x_client_time, end_date_str)
-            existing_dates = {schedule['date'] for schedule in response_data['schedules']}
-            for date in date_array:
-                if date not in existing_dates:
-                    response_data['schedules'].append({
-                        'date': date,
-                        'lessons': []
-                    })
-            response_data['schedules'].sort(key=lambda x: x['date'])
+                response_data = {
+                    "client_name": queryset.client_name,
+                    'is_teacher': queryset.is_teacher,
+                    "schedules": schedule_serializer.data
+                }
     
             return Response(response_data, status=status.HTTP_200_OK)
         except Client.DoesNotExist:
