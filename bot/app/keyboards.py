@@ -17,9 +17,7 @@ def action_selection():
 def start_keyboard():
     builder = InlineKeyboardBuilder()
     builder.row(
-        types.InlineKeyboardButton(.0.0.1:8000/
-Quit the server with CONTROL-C.
-
+        types.InlineKeyboardButton(
             text="Открыть расписание", 
             web_app=types.WebAppInfo(url="https://schedule.omsktec-playgrounds.ru/")
         ),
