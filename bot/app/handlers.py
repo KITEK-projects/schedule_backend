@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+
 from aiogram import Router
 from aiogram.types import Message, ContentType, CallbackQuery
 from aiogram.filters import Command, StateFilter
@@ -6,15 +8,17 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram import F
 
-import aiohttp
+load_dotenv()
 
+API = os.getenv('API')
+
+
+import aiohttp
 
 from .parser import html_parse 
 from .keyboards import action_selection, start_keyboard
 
 router = Router()
-
-API = "http://schedule-api:8000/v1/"
 
 document = None
 file_id = ""

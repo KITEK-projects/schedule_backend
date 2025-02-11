@@ -4,13 +4,13 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 def action_selection():
     builder = InlineKeyboardBuilder()
     builder.row(
-        types.InlineKeyboardButton(text="Добавить|Обновить", callback_data="add"),
+        types.InlineKeyboardButton(text="➕ Добавить(обновить)", callback_data="add"),
     )
     builder.row(
-        types.InlineKeyboardButton(text="Удалить", callback_data="del"),
+        types.InlineKeyboardButton(text="🗑 Удалить", callback_data="del"),
     )
     builder.row(
-        types.InlineKeyboardButton(text="Отмена", callback_data="cancel"),
+        types.InlineKeyboardButton(text="✖️ Отмена", callback_data="cancel"),
     )
     return builder
 

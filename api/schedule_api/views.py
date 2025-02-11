@@ -89,7 +89,6 @@ class ScheduleApiView(mixins.CreateModelMixin,
             for item in serializer.validated_data:
                 client_name = item.get('client_name')
                 schedules_data = item.get('schedules', [])
-                
                 try:
                     client = Client.objects.get(client_name=client_name)
                     for schedule_data in schedules_data:
