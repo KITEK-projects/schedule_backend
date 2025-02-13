@@ -48,7 +48,7 @@ services:
       schedule-db:
         condition: service_healthy 
     volumes:
-      - /home/xaori/schedule_backend/api/media/:/media  
+      - /home/xaori/schedule_backend/api/media/:/app/media  
     networks:
       - schedule
     
