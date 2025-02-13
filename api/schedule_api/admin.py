@@ -3,6 +3,7 @@ from django.shortcuts import redirect, render
 from schedule_api.models import *
 from .parsers import html_parse
 from django.http import HttpResponse
+from serializers import ClientSerializer
 
 from django.urls import path
 
@@ -29,43 +30,10 @@ class ClientAdmin(admin.ModelAdmin):
                 html_content = uploaded_file.read().decode('windows-1251')
                 parsed_data = html_parse(html_content)
 
-                for entry in parsed_data:
-                    client_name = entry['client_name']
-                    is_teacher = entry['is_teacher']
-                    schedules = entry['schedules']
-
-                    client, _ = Client.objects.get_or_create(
-                        client_name=client_name,
-                        defaults={'is_teacher': is_teacher}
-                    )
-
-                    for schedule in schedules:
-                        schedule_date = schedule['date']
-                        lessons = schedule['lessons']
-
-                        schedule_obj, _ = Schedule.objects.get_or_create(
-                            client=client,
-                            date=schedule_date
-                        )
-
-                        for lesson in lessons:
-                            lesson_number = lesson['number']
-                            items = lesson['items']
-
-                            lesson_obj, _ = Lesson.objects.get_or_create(
-                                schedule=schedule_obj,
-                                number=lesson_number
-                            )
-
-                            for item in items:
-                                ItemLesson.objects.get_or_create(
-                                    lesson=lesson_obj,
-                                    title=item['title'],
-                                    type=item['type'],
-                                    partner=item['partner'],
-                                    location=item['location']
-                                )
-
+                serializer = ClientSerializer(data=parsed_data, many=True)
+                if serializer.is_valid():
+                    serializer.save()
+                
                 self.message_user(request, "Данные успешно загружены и сохранены.")
             except Exception as e:
                 self.message_user(request, f"Ошибка при обработке файла: {str(e)}", level='error')
