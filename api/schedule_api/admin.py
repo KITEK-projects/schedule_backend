@@ -33,6 +33,10 @@ class ClientAdmin(admin.ModelAdmin):
                 serializer = ClientSerializer(data=parsed_data, many=True)
                 if serializer.is_valid():
                     serializer.save()
+                    ScheduleFile.objects.create(
+                        file_name = "test",
+                        schedule_file = uploaded_file
+                    )
                 
                 self.message_user(request, "Данные успешно загружены и сохранены.")
             except Exception as e:
@@ -60,9 +64,13 @@ class ItemLessonAdmin(admin.ModelAdmin):
     list_display = ('lesson', 'title', 'type', 'partner', 'location')
     list_filter = ('title', 'type', 'partner', 'location')
 
+class ScheduleFileAdmin(admin.ModelAdmin):
+    list_display = ('file_name', 'schedule_file')
+    list_filter = ('file_name',)
 
 admin.site.register(Client, ClientAdmin)
 admin.site.register(Schedule, ScheduleAdmin)
 admin.site.register(Lesson, LessonAdmin)
 admin.site.register(ItemLesson, ItemLessonAdmin)
 admin.site.register(User)
+admin.site.register(ScheduleFile, ScheduleFileAdmin)

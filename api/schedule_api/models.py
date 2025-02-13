@@ -29,7 +29,11 @@ class ItemLesson(models.Model):
     partner = models.CharField(max_length=255)
     location = models.CharField(max_length=50, null=True, blank=True)
     
-    
+
+class ScheduleFile(models.Model):
+    file_name = models.CharField(max_length=255)
+    schedule_file = models.FileField()
+
 
 class User(models.Model):
     user_id = models.CharField(max_length=100, unique=True)
