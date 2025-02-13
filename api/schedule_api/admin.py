@@ -3,7 +3,7 @@ from django.shortcuts import redirect, render
 from schedule_api.models import *
 from .parsers import html_parse
 from django.http import HttpResponse
-from serializers import ClientSerializer
+from .serializers import ClientSerializer
 
 from django.urls import path
 
