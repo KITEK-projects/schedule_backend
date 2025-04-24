@@ -19,9 +19,9 @@ dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
 config = load_dotenv(dotenv_path)
 key = os.getenv("SECRET_KEY")
 host = os.getenv('HOST')
-user = os.getenv('USER')
+user = os.getenv('DB_USER')
 password = os.getenv('PASSWORD')
-name = os.getenv('NAME')
+name = os.getenv('DB_NAME')
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -35,7 +35,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -43,10 +43,11 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'schedule_api',
+    'schedule_api.apps.ScheduleApiConfig',
     'corsheaders',
     'rest_framework',
     
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -66,7 +67,21 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
 ]
 
+CSRF_TRUSTED_ORIGINS = ["https://schedule.omsktec-playgrounds.ru"]
+
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-client-time',
+]
 
 CORS_ALLOW_HEADERS = [
     "X-CLIENT-TIME",
@@ -103,7 +118,7 @@ DATABASES = {
         'USER': user,
         'PASSWORD': password,
         'HOST': host,
-        'PORT': 5432,
+        'PORT': "5432",
     }
 }
 
@@ -144,6 +159,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static') 
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
