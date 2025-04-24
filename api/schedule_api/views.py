@@ -134,42 +134,4 @@ class ClientsApiView(APIView):
         client_data = [client.client_name for client in clients_list]
 
         return Response(client_data, status=status.HTTP_200_OK)
-            
-        
-class UsersApiView(APIView):
-    @internal_api
-    def get(self, request, user_id=None):
-        if user_id:
-            user = get_object_or_404(User, user_id=user_id)
-            if user.is_admin:
-                return Response({'is_admin': True, "is_super_admin": user.is_super_admin}, status=status.HTTP_200_OK)
-            return Response({'is_admin': False, "is_super_admin": user.is_super_admin}, status=status.HTTP_200_OK)
-        
-        all_users = User.objects.all()
-        serializer = UserSerializer(all_users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    @internal_api
-    def post(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @internal_api
-    def put(self, request, user_id):
-        user = get_object_or_404(User, user_id=user_id)
-        serializer = UserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @internal_api
-    def delete(self, request, user_id):
-        user = get_object_or_404(User, user_id=user_id)
-        user.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-        
         

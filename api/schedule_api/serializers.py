@@ -64,10 +64,3 @@ class ClientSerializer(serializers.ModelSerializer):
                     ItemLesson.objects.create(lesson=lesson, **item_data)
 
         return client
-
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['user_id', 'is_admin', 'name', 'is_super_admin']
