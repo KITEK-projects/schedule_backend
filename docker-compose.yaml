@@ -30,15 +30,6 @@ services:
     networks:
       - schedule
 
-  schedule-bot:
-    container_name: schedule-bot
-    build: bot/
-    depends_on:
-      schedule-db:
-        condition: service_healthy 
-    networks:
-      - schedule
-
   schedule-api:
     container_name: schedule-api
     build: api/
