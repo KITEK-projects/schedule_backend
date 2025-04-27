@@ -2,13 +2,12 @@ name: 🚀 Deploy to Production
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-
     steps:
       - name: 🔑 Setup SSH agent
         uses: webfactory/ssh-agent@v0.9.1
