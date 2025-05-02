@@ -15,7 +15,7 @@ class ClientAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            path('upload-html/', self.admin_site.admin_view(self.upload_and_parse_html), name='upload_html'),
+            path('add/', self.admin_site.admin_view(self.upload_and_parse_html), name='add'),
         ]
         return custom_urls + urls
 

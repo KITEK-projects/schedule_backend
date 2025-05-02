@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
   title: API для backend'а ScheduleApp - спецификация
-  version: 1.0.0
+  version: 1.0.1
 servers:
-  - url: http://147.45.158.220/api/v1
+  - url: https://schedule.omsktec-playgrounds.ru/api/v1/
     description: Dev server
 paths:
   /schedule/:
