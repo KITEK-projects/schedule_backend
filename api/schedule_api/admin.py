@@ -19,6 +19,25 @@ class MyAdminSite(admin.AdminSite):
         ]
         return custom_urls + urls
 
+    def message_user(
+        self, request, message, level="info", extra_tags="", fail_silently=False
+    ):
+        """
+        Send a message to the user. Default level is 'info'.
+        """
+        from django.contrib import messages
+
+        levels = {
+            "info": messages.INFO,
+            "success": messages.SUCCESS,
+            "warning": messages.WARNING,
+            "error": messages.ERROR,
+        }
+        level = levels.get(level, messages.INFO)
+        messages.add_message(
+            request, level, message, extra_tags=extra_tags, fail_silently=fail_silently
+        )
+
     def upload_and_parse_html(self, request):
         if request.method == "POST":
             uploaded_file = request.FILES.get("html_file")
