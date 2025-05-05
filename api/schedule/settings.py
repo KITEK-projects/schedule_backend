@@ -35,7 +35,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -70,10 +70,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://147.45.158.220/api/v1/",
     "http://147.45.158.220/api/v1/",
 ]
-
-CSRF_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_DOMAIN = None
-CSRF_COOKIE_HTTPONLY = False
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = [
