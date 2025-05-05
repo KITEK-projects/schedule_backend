@@ -66,7 +66,16 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
 ]
 
-CSRF_TRUSTED_ORIGINS = ["https://schedule.omsktec-playgrounds.ru"]
+CSRF_TRUSTED_ORIGINS = [
+    "https://schedule.omsktec-playgrounds.ru",
+    "https://omsktec-playgrounds.ru",
+    "https://schedule.omsktec-playgrounds.ru",
+    "127.0.0.1"
+]
+
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_DOMAIN = None
+CSRF_COOKIE_HTTPONLY = False
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = [
