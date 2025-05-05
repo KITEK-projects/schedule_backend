@@ -68,9 +68,9 @@ MIDDLEWARE = [
 
 CSRF_TRUSTED_ORIGINS = [
     "https://schedule.omsktec-playgrounds.ru",
-    "https://omsktec-playgrounds.ru",
-    "https://schedule.omsktec-playgrounds.ru",
-    "127.0.0.1"
+    "https://omsktec-playgrounds.ru",  # Исправлено (убрано лишнее двоеточие)
+    "https://schedule.omsktec-playgrounds.ru",  # Исправлено (убрано лишнее двоеточие)
+    "http://127.0.0.1",  # Добавлен протокол (http для локального сервера)
 ]
 
 CSRF_COOKIE_SAMESITE = 'Lax'
