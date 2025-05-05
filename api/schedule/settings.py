@@ -35,7 +35,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -67,13 +67,11 @@ MIDDLEWARE = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://schedule.omsktec-playgrounds.ru",
-    "https://omsktec-playgrounds.ru",  # Исправлено (убрано лишнее двоеточие)
-    "https://schedule.omsktec-playgrounds.ru",  # Исправлено (убрано лишнее двоеточие)
-    "http://127.0.0.1",  # Добавлен протокол (http для локального сервера)
+    "https://147.45.158.220/api/v1/",
+    "http://147.45.158.220/api/v1/",
 ]
 
-CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_DOMAIN = None
 CSRF_COOKIE_HTTPONLY = False
 
