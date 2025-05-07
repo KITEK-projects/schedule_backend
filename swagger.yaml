@@ -3,7 +3,7 @@ info:
   title: API для backend'а ScheduleApp - спецификация
   version: 1.0.1
 servers:
-  - url: https://omsktec-playgrounds.ru/api/v1/
+  - url: https://app.omsktec.ru/api/v1/
     description: Dev server
 paths:
   /schedule/:
