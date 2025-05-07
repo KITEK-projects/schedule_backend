@@ -23,7 +23,7 @@ services:
     container_name: schedule-web
     image: nginx
     volumes:
-      - ./web:/usr/share/nginx/html:ro
+      - ./web/kitek/dist/:/usr/share/nginx/html:ro
     ports:
       - "8080:80"
     environment:
