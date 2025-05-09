@@ -69,7 +69,7 @@ MIDDLEWARE = [
 CSRF_TRUSTED_ORIGINS = [
     "https://147.45.158.220",
     "http://147.45.158.220",
-    "https://app.omsktec.ru"
+    "https://app.omsktec.ru",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True

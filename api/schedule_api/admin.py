@@ -5,6 +5,7 @@ from .parsers import html_parse
 from django.http import HttpResponse
 from .serializers import ClientSerializer
 from django.urls import path
+from .notification import send_notification
 
 
 class MyAdminSite(admin.AdminSite):
@@ -57,6 +58,7 @@ class MyAdminSite(admin.AdminSite):
                     )
 
                 self.message_user(request, "Данные успешно загружены и сохранены.")
+                print("[ NOTIFICATION ] " + str(send_notification()))
             except Exception as e:
                 self.message_user(
                     request, f"Ошибка при обработке файла: {str(e)}", level="error"
