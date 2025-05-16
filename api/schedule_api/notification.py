@@ -28,7 +28,7 @@ def send_notification():
 
     message = {
         "message": {
-            "topic": "random",
+            "topic": "update",
             "notification": {
                 "title": "Расписание обновлено!",
                 "body": "Нажмите чтобы открыть приложение...",
