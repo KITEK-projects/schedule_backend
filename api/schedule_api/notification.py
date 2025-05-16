@@ -34,7 +34,7 @@ def send_notification():
                 "body": "Нажмите чтобы открыть приложение...",
             },
         }
-    }``
+    }
 
     response = requests.post(url, headers=headers, data=json.dumps(message))
     return response
