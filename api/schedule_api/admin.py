@@ -1,11 +1,11 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.shortcuts import redirect, render
 from schedule_api.models import *
 from .parsers import html_parse
-from django.http import HttpResponse
 from .serializers import ClientSerializer
 from django.urls import path
 from .notification import send_notification
+from django import forms
 
 
 class MyAdminSite(admin.AdminSite):
@@ -26,7 +26,6 @@ class MyAdminSite(admin.AdminSite):
         """
         Send a message to the user. Default level is 'info'.
         """
-        from django.contrib import messages
 
         levels = {
             "info": messages.INFO,
@@ -42,6 +41,8 @@ class MyAdminSite(admin.AdminSite):
     def upload_and_parse_html(self, request):
         if request.method == "POST":
             uploaded_file = request.FILES.get("html_file")
+            send_notifications = request.POST.get("send_notifications") == "on"
+
             if not uploaded_file:
                 self.message_user(request, "Файл не был загружен.", level="error")
                 return redirect(".")
@@ -58,13 +59,14 @@ class MyAdminSite(admin.AdminSite):
                     )
 
                 self.message_user(request, "Данные успешно загружены и сохранены.")
-                print("[ NOTIFICATION ] " + str(send_notification()))
+
+                if send_notifications:
+                    print("[ NOTIFICATION ] " + str(send_notification()))
+
             except Exception as e:
                 self.message_user(
                     request, f"Ошибка при обработке файла: {str(e)}", level="error"
                 )
-
-        from django import forms
 
         class UploadFileForm(forms.Form):
             html_file = forms.FileField(label="Выберите HTML файл")

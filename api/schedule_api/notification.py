@@ -4,6 +4,7 @@ import requests
 import json
 import os
 
+
 def send_notification():
     SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"]
     SERVICE_ACCOUNT_FILE = "service-account.json"
@@ -28,10 +29,10 @@ def send_notification():
 
     message = {
         "message": {
-            "topic": "update",
+            "topic": "test",
             "notification": {
-                "title": "Расписание обновлено!",
-                "body": "Нажмите чтобы открыть приложение...",
+                "title": "Появилось новое расписание 📅",
+                "body": "Посмотри его в приложении",
             },
         }
     }
