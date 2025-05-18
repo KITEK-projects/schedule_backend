@@ -6,6 +6,9 @@ from .serializers import ClientSerializer
 from django.urls import path
 from .notification import send_notification
 from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
+
 
 
 class MyAdminSite(admin.AdminSite):
@@ -110,3 +113,4 @@ admin_site.register(Schedule, ScheduleAdmin)
 admin_site.register(Lesson, LessonAdmin)
 admin_site.register(ItemLesson, ItemLessonAdmin)
 admin_site.register(ScheduleFile, ScheduleFileAdmin)
+admin_site.register(User, UserAdmin)
