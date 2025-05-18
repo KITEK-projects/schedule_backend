@@ -55,7 +55,7 @@ class MyAdminSite(admin.AdminSite):
                 if serializer.is_valid():
                     serializer.save()
                     ScheduleFile.objects.create(
-                        file_name="test", schedule_file=uploaded_file
+                        file_name=uploaded_file.name, schedule_file=uploaded_file
                     )
 
                 self.message_user(request, "Данные успешно загружены и сохранены.")
@@ -101,8 +101,8 @@ class ItemLessonAdmin(admin.ModelAdmin):
 
 
 class ScheduleFileAdmin(admin.ModelAdmin):
-    list_display = ("file_name", "schedule_file")
-    list_filter = ("file_name",)
+    list_display = ("file_name", "date", "schedule_file")
+    list_filter = ("file_name", "date")
 
 
 admin_site.register(Client, ClientAdmin)
