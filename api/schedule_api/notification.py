@@ -29,7 +29,7 @@ def send_notification():
 
     message = {
         "message": {
-            "topic": "test",
+            "topic": "update",
             "notification": {
                 "title": "Появилось новое расписание 📅",
                 "body": "Посмотри его в приложении",
