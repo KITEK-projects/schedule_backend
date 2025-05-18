@@ -52,15 +52,17 @@ def parse_for_teacher(data, teacher_data=[]):
                             )
 
                             if new_classes:
-                                # If a class already exists, append new information
-                                new_classes["items"].append(
-                                    {
-                                        "title": title,
-                                        "type": _type,
-                                        "partner": client,
-                                        "location": location,
-                                    }
-                                )
+
+                                new_item = {
+                                    "title": title,
+                                    "type": _type,
+                                    "partner": client,
+                                    "location": location,
+                                }
+
+                                if new_item not in new_classes["items"]:
+                                    new_classes["items"].append(new_item)
+
                             else:
                                 # Create a new class entry if it doesn't exist
                                 new_date["lessons"].append(
@@ -175,7 +177,7 @@ def html_parse(src):
             if len(tds_soup) > 1:
                 location = tds_soup[1].get_text(separator="<br>").split("<br>")
                 location = [i.replace("-", "") for i in location]
-                
+
             # Проверяем, есть ли содержимое в ячейке
             if tds_soup[0].get_text().strip() == "&nbsp;" or not tds:
                 # Если день уже существует, пропускаем
@@ -242,7 +244,11 @@ def html_parse(src):
 #     import json
 
 #     # Читаем HTML файл
-#     with open("16дек-главное.html", "r", encoding="windows-1251") as file:
+#     with open(
+#         "Ректор-Колледж - Расписание занятий для групп].html",
+#         "r",
+#         encoding="windows-1251",
+#     ) as file:
 #         html_content = file.read()
 
 #     # Получаем результат парсинга

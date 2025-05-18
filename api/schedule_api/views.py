@@ -11,13 +11,6 @@ from .models import *
 from .serializers import *
 from .decorators import internal_api
 
-
-BOT = 'schedule-bot'
-
-
-# class ScheduleApiView(generics.ListAPIView):
-#     queryset = Client.objects.all()
-#     serializer_class = UsersSerializer
     
 class ScheduleApiView(mixins.CreateModelMixin,
                       generics.GenericAPIView):
