@@ -39,44 +39,33 @@ class ClientSerializer(serializers.ModelSerializer):
 
     def update_or_create_client(self, validated_data):
         schedules_data = validated_data.pop("schedules", [])
+
         client_name = validated_data.get("client_name")
         is_teacher = validated_data.get("is_teacher")
-
         client, _ = Client.objects.get_or_create(
-            client_name=client_name, defaults={"is_teacher": is_teacher}
+            client_name=client_name, is_teacher=is_teacher
         )
 
-        if client.is_teacher != is_teacher:
-            client.is_teacher = is_teacher
-            client.save()
+        existing_schedule_dates = [s["date"] for s in schedules_data]
+        Schedule.objects.filter(client=client).exclude(
+            date__in=existing_schedule_dates
+        ).delete()
 
         for schedule_data in schedules_data:
-            date = schedule_data["date"]
-            lessons_data = schedule_data.get("lessons", [])
+            lessons_data = schedule_data.pop("lessons", [])
+            schedule_date = schedule_data.pop("date")
 
-            schedule, _ = Schedule.objects.get_or_create(client=client, date=date)
+            schedule, _ = Schedule.objects.get_or_create(
+                client=client, date=schedule_date
+            )
 
-            existing_lessons = {
-                lesson.number: lesson for lesson in schedule.lessons.all()
-            }
-            incoming_numbers = set()
+            Lesson.objects.filter(schedule=schedule).delete()
 
             for lesson_data in lessons_data:
-                number = lesson_data["number"]
-                items_data = lesson_data.get("items", [])
-                incoming_numbers.add(number)
+                items_data = lesson_data.pop("items", [])
 
-                lesson = existing_lessons.get(number)
-                if not lesson:
-                    lesson = Lesson.objects.create(schedule=schedule, number=number)
-                else:
-                    lesson.items.all().delete()
-
+                lesson = Lesson.objects.create(schedule=schedule, **lesson_data)
                 for item_data in items_data:
                     ItemLesson.objects.create(lesson=lesson, **item_data)
-
-            for number, lesson in existing_lessons.items():
-                if number not in incoming_numbers:
-                    lesson.delete()
 
         return client
