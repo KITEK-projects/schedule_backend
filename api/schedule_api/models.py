@@ -32,7 +32,7 @@ class ItemLesson(models.Model):
 
 class ScheduleFile(models.Model):
     file_name = models.CharField(max_length=255)
-    date = models.DateField(auto_now=True, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     schedule_file = models.FileField()
 
     

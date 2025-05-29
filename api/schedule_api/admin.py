@@ -10,7 +10,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 
 
-
 class MyAdminSite(admin.AdminSite):
     def get_urls(self):
         urls = super().get_urls()
@@ -104,8 +103,8 @@ class ItemLessonAdmin(admin.ModelAdmin):
 
 
 class ScheduleFileAdmin(admin.ModelAdmin):
-    list_display = ("file_name", "date", "schedule_file")
-    list_filter = ("file_name", "date")
+    list_display = ("file_name", "created_at", "schedule_file")
+    list_filter = ("file_name", "created_at")
 
 
 admin_site.register(Client, ClientAdmin)

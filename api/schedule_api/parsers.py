@@ -4,16 +4,23 @@ from bs4 import BeautifulSoup
 data = []
 
 
-def parse_for_teacher(data, teacher_data=[]):
-    for data_item in data:
-        client = data_item.get("client_name", None)
+def parse_for_teacher(data, teacher_data=None):
+    if teacher_data is None:
+        teacher_data = []
 
-        # Process each schedule item for the current client
+    # Собираем все уникальные даты из всех клиентов
+    all_dates = set()
+    for data_item in data:
+        for schedule in data_item.get("schedules", []):
+            all_dates.add(schedule.get("date"))
+
+    for data_item in data:
+        client = data_item.get("client_name")
+
         for schedule_item in data_item.get("schedules", []):
             date = schedule_item["date"]
             lessons = schedule_item["lessons"]
 
-            # Process each class item in the schedule
             for lesson in lessons:
                 number = lesson["number"]
 
@@ -23,119 +30,51 @@ def parse_for_teacher(data, teacher_data=[]):
                     partner = class_item["partner"]
                     location = class_item["location"]
 
-                    # Find the corresponding teacher based on the partner
+                    # Найти или создать запись для преподавателя
                     new_client = next(
-                        (obj for obj in teacher_data if obj["client_name"] == partner),
-                        None,
+                        (t for t in teacher_data if t["client_name"] == partner), None
                     )
-
-                    if new_client:
-                        # Check if the date exists in the teacher's schedule
-                        (new_date, date_index) = next(
-                            (
-                                (obj, i)
-                                for i, obj in enumerate(new_client.get("schedules", []))
-                                if obj.get("date") == date
-                            ),
-                            (None, None),
-                        )
-
-                        if new_date:
-                            # Find or create a class entry for this date
-                            (new_classes, classes_index) = next(
-                                (
-                                    (obj, i)
-                                    for i, obj in enumerate(new_date.get("lessons", []))
-                                    if obj.get("number") == number
-                                ),
-                                (None, None),
-                            )
-
-                            if new_classes:
-
-                                new_item = {
-                                    "title": title,
-                                    "type": _type,
-                                    "partner": client,
-                                    "location": location,
-                                }
-
-                                if new_item not in new_classes["items"]:
-                                    new_classes["items"].append(new_item)
-
-                            else:
-                                # Create a new class entry if it doesn't exist
-                                new_date["lessons"].append(
-                                    {
-                                        "number": number,
-                                        "items": [
-                                            {
-                                                "title": title,
-                                                "type": _type,
-                                                "partner": client,
-                                                "location": location,
-                                            }
-                                        ],
-                                    }
-                                )
-                        else:
-                            # If no date exists, create a new entry
-                            new_client["schedules"].append(
-                                {
-                                    "date": date,
-                                    "lessons": [
-                                        {
-                                            "number": number,
-                                            "items": [
-                                                {
-                                                    "title": title,
-                                                    "type": _type,
-                                                    "partner": client,
-                                                    "location": location,
-                                                }
-                                            ],
-                                        }
-                                    ],
-                                }
-                            )
-
-                        # Update the teacher's schedule with the modified client data
-
-                        teacher_index = next(
-                            (
-                                i
-                                for i, obj in enumerate(teacher_data)
-                                if obj.get("client_name") == partner
-                            ),
-                            0,
-                        )
-                        teacher_data[teacher_index] = new_client
-
-                    else:
-                        # Create a new client entry if not found
-                        new_teacher_data = {
+                    if not new_client:
+                        new_client = {
                             "client_name": partner,
                             "is_teacher": True,
-                            "schedules": [
-                                {
-                                    "date": date,
-                                    "lessons": [
-                                        {
-                                            "number": number,
-                                            "items": [
-                                                {
-                                                    "title": title,
-                                                    "type": _type,
-                                                    "partner": client,
-                                                    "location": location,
-                                                }
-                                            ],
-                                        }
-                                    ],
-                                }
-                            ],
+                            "schedules": [],
                         }
-                        teacher_data.append(new_teacher_data)
+                        teacher_data.append(new_client)
+
+                    # Убедиться, что есть запись на дату
+                    date_entry = next(
+                        (s for s in new_client["schedules"] if s["date"] == date), None
+                    )
+                    if not date_entry:
+                        date_entry = {"date": date, "lessons": []}
+                        new_client["schedules"].append(date_entry)
+
+                    # Убедиться, что есть запись на номер урока
+                    class_entry = next(
+                        (l for l in date_entry["lessons"] if l["number"] == number),
+                        None,
+                    )
+                    if not class_entry:
+                        class_entry = {"number": number, "items": []}
+                        date_entry["lessons"].append(class_entry)
+
+                    # Добавить предмет, если его ещё нет
+                    item = {
+                        "title": title,
+                        "type": _type,
+                        "partner": client,
+                        "location": location,
+                    }
+                    if item not in class_entry["items"]:
+                        class_entry["items"].append(item)
+
+    # === Добавляем недостающие даты с пустыми lessons ===
+    for teacher in teacher_data:
+        existing_dates = {s["date"] for s in teacher.get("schedules", [])}
+        missing_dates = all_dates - existing_dates
+        for date in missing_dates:
+            teacher["schedules"].append({"date": date, "lessons": []})
 
     return teacher_data
 
@@ -245,7 +184,7 @@ def html_parse(src):
 
 #     # Читаем HTML файл
 #     with open(
-#         "Ректор-Колледж - Расписание занятий для групп].html",
+#         "29 расписание.html",
 #         "r",
 #         encoding="windows-1251",
 #     ) as file:
@@ -255,5 +194,5 @@ def html_parse(src):
 #     result = html_parse(html_content)
 
 #     # Сохраняем результат в JSON файл
-#     with open("scheduleYA.json", "w", encoding="utf-8") as file:
+#     with open("scheduleт.json", "w", encoding="utf-8") as file:
 #         json.dump(result, file, ensure_ascii=False, indent=4)
