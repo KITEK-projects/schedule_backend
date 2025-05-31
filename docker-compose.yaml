@@ -2,6 +2,7 @@ services:
   schedule-db:
     container_name: schedule-db
     image: postgres
+    restart: always
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
@@ -22,6 +23,7 @@ services:
   schedule-web:
     container_name: schedule-web
     image: nginx
+    restart: always
     volumes:
       - ./web/kitek/dist/:/usr/share/nginx/html:ro
     ports:
@@ -34,6 +36,7 @@ services:
   schedule-api:
     container_name: schedule-api
     build: api/
+    restart: always
     ports:
       - "8000:8000"
     depends_on:
@@ -47,6 +50,7 @@ services:
   schedule-swagger:
     container_name: schedule-swagger
     image: swaggerapi/swagger-ui:latest
+    restart: always
     ports:
       - "8079:8080"
     environment:
