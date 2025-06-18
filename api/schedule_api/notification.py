@@ -2,7 +2,6 @@ from google.oauth2 import service_account
 import google.auth.transport.requests
 import requests
 import json
-import os
 
 
 def send_notification():

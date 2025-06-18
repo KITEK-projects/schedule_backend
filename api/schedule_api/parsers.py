@@ -4,10 +4,7 @@ from bs4 import BeautifulSoup
 data = []
 
 
-def parse_for_teacher(data, teacher_data=None):
-    if teacher_data is None:
-        teacher_data = []
-
+def parse_for_teacher(data, teacher_data=[]):
     # Собираем все уникальные даты из всех клиентов
     all_dates = set()
     for data_item in data:
@@ -15,7 +12,7 @@ def parse_for_teacher(data, teacher_data=None):
             all_dates.add(schedule.get("date"))
 
     for data_item in data:
-        client = data_item.get("client_name")
+        client_name = data_item.get("client_name")
 
         for schedule_item in data_item.get("schedules", []):
             date = schedule_item["date"]
@@ -23,51 +20,39 @@ def parse_for_teacher(data, teacher_data=None):
 
             for lesson in lessons:
                 number = lesson["number"]
+                title = lesson["title"]
+                _type = lesson["type"]
+                partner = lesson["partner"]
+                location = lesson["location"]
 
-                for class_item in lesson["items"]:
-                    title = class_item["title"]
-                    _type = class_item["type"]
-                    partner = class_item["partner"]
-                    location = class_item["location"]
-
-                    # Найти или создать запись для преподавателя
-                    new_client = next(
-                        (t for t in teacher_data if t["client_name"] == partner), None
-                    )
-                    if not new_client:
-                        new_client = {
-                            "client_name": partner,
-                            "is_teacher": True,
-                            "schedules": [],
-                        }
-                        teacher_data.append(new_client)
-
-                    # Убедиться, что есть запись на дату
-                    date_entry = next(
-                        (s for s in new_client["schedules"] if s["date"] == date), None
-                    )
-                    if not date_entry:
-                        date_entry = {"date": date, "lessons": []}
-                        new_client["schedules"].append(date_entry)
-
-                    # Убедиться, что есть запись на номер урока
-                    class_entry = next(
-                        (l for l in date_entry["lessons"] if l["number"] == number),
-                        None,
-                    )
-                    if not class_entry:
-                        class_entry = {"number": number, "items": []}
-                        date_entry["lessons"].append(class_entry)
-
-                    # Добавить предмет, если его ещё нет
-                    item = {
-                        "title": title,
-                        "type": _type,
-                        "partner": client,
-                        "location": location,
+                new_client = next(
+                    (t for t in teacher_data if t["client_name"] == partner), None
+                )
+                if not new_client:
+                    new_client = {
+                        "client_name": partner,
+                        "is_teacher": True,
+                        "schedules": [],
                     }
-                    if item not in class_entry["items"]:
-                        class_entry["items"].append(item)
+                    teacher_data.append(new_client)
+
+                # Убедиться, что есть запись на дату
+                date_entry = next(
+                    (s for s in new_client["schedules"] if s["date"] == date), None
+                )
+                if not date_entry:
+                    date_entry = {"date": date, "lessons": []}
+                    new_client["schedules"].append(date_entry)
+
+                item = {
+                    "number": number,
+                    "title": title,
+                    "type": _type,
+                    "partner": client_name,
+                    "location": location,
+                }
+                if item not in date_entry["lessons"]:
+                    date_entry["lessons"].append(item)
 
     # === Добавляем недостающие даты с пустыми lessons ===
     for teacher in teacher_data:
@@ -131,40 +116,37 @@ def html_parse(src):
             for i in tds_info:
                 if i[0] != "":
                     if len(i) == 3:
-                        class_info = {
-                            "number": number,
-                            "items": [
-                                {
-                                    "title": i[0].capitalize(),
-                                    "type": i[1].strip("()"),
-                                    "partner": i[2],
-                                    "location": location[0],
-                                }
-                            ],
-                        }
+                        lesson = [
+                            {
+                                "number": number,
+                                "title": i[0].capitalize(),
+                                "type": i[1].strip("()"),
+                                "partner": i[2],
+                                "location": location[0],
+                            }
+                        ]
                     elif len(i) == 6:
-                        class_info = {
-                            "number": number,
-                            "items": [
-                                {
-                                    "title": i[0].capitalize(),
-                                    "type": i[1].strip("()"),
-                                    "partner": i[2],
-                                    "location": location[0],
-                                },
-                                {
-                                    "title": i[3].capitalize(),
-                                    "type": i[4].strip("()"),
-                                    "partner": i[5],
-                                    "location": location[1],
-                                },
-                            ],
-                        }
+                        lesson = [
+                            {
+                                "number": number,
+                                "title": i[0].capitalize(),
+                                "type": i[1].strip("()"),
+                                "partner": i[2],
+                                "location": location[0],
+                            },
+                            {
+                                "number": number,
+                                "title": i[3].capitalize(),
+                                "type": i[4].strip("()"),
+                                "partner": i[5],
+                                "location": location[1],
+                            },
+                        ]
 
                     if schedule and schedule[-1]["date"] == date:
-                        schedule[-1]["lessons"].append(class_info)
+                        schedule[-1]["lessons"].extend(lesson)
                     else:
-                        schedule.append({"date": date, "lessons": [class_info]})
+                        schedule.append({"date": date, "lessons": lesson})
             tds_info = []
 
         for entry in data:
@@ -184,7 +166,7 @@ def html_parse(src):
 
 #     # Читаем HTML файл
 #     with open(
-#         "29 расписание.html",
+#         "17июня.html",
 #         "r",
 #         encoding="windows-1251",
 #     ) as file:

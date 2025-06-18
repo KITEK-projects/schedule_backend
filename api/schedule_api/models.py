@@ -1,39 +1,46 @@
 from django.db import models
-    
-    
+
+
 class Client(models.Model):
-    client_name = models.CharField(max_length=255)
+    client_name = models.CharField(max_length=255, unique=True)
     is_teacher = models.BooleanField(default=False)
 
-    class Meta:
-        ordering = ['client_name']
+    def __str__(self):
+        return self.client_name
 
-class Schedule(models.Model):
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='schedules')
+    # class Meta:
+    #     # ordering = ["name"]
+
+
+class ScheduleDay(models.Model):
     date = models.DateField()
-    
+    client = models.ForeignKey(
+        Client, on_delete=models.CASCADE, related_name="schedule_days"
+    )
+
+    def __str__(self):
+        return self.date.strftime("%d.%m.%Y")
+
     class Meta:
-        ordering = ['date']
+        ordering = ["date"]
+        unique_together = ("client", "date")
+
 
 class Lesson(models.Model):
-    schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name='lessons')
+    schedule = models.ForeignKey(
+        ScheduleDay, on_delete=models.CASCADE, related_name="lessons"
+    )
     number = models.IntegerField()
-    
-    class Meta:
-        ordering = ['number']
-
-class ItemLesson(models.Model):
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='items')
     title = models.CharField(max_length=255)
     type = models.CharField(max_length=50)
     partner = models.CharField(max_length=255)
     location = models.CharField(max_length=50, null=True, blank=True)
-    
+
+    class Meta:
+        ordering = ["title", "number"]
+
 
 class ScheduleFile(models.Model):
     file_name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     schedule_file = models.FileField()
-
-    
-    

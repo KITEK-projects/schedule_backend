@@ -1,13 +1,16 @@
 from django.contrib import admin, messages
 from django.shortcuts import redirect, render
 from schedule_api.models import *
-from .parsers import html_parse
-from .serializers import ClientSerializer
+from schedule_api.services import set_schedule
 from django.urls import path
-from .notification import send_notification
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
+from django.shortcuts import render, redirect
+from .notification import send_notification
+from schedule_api.models import Client, ScheduleDay, Lesson, ScheduleFile
+from django import forms
+from datetime import datetime
 
 
 class MyAdminSite(admin.AdminSite):
@@ -49,27 +52,42 @@ class MyAdminSite(admin.AdminSite):
                 self.message_user(request, "Файл не был загружен.", level="error")
                 return redirect(".")
 
-            try:
-                html_content = uploaded_file.read().decode("windows-1251")
-                parsed_data = html_parse(html_content)
-
-                serializer = ClientSerializer(data=parsed_data, many=True)
-                if serializer.is_valid():
-                    serializer.save()
-                    ScheduleFile.objects.create(
-                        file_name=uploaded_file.name, schedule_file=uploaded_file
-                    )
-
-                self.message_user(request, "Данные успешно загружены и сохранены.")
-
-                if send_notifications:
-                    print("[ NOTIFICATION ] " + str(send_notification()))
-
-            except Exception as e:
+            if not uploaded_file.name.endswith(".html"):
                 self.message_user(
-                    request, f"Ошибка при обработке файла: {str(e)}", level="error"
+                    request, "Файл должен иметь расширение .html", level="error"
+                )
+                return redirect(".")
+
+            content_type = uploaded_file.content_type
+            if content_type not in ("text/html", "application/octet-stream"):
+                self.message_user(
+                    request,
+                    f"Неверный тип содержимого файла: {content_type}",
+                    level="error",
+                )
+                return redirect(".")
+
+            try:
+                content = uploaded_file.read().decode("windows-1251", errors="replace")
+                set_schedule(content, uploaded_file)
+
+                self.message_user(
+                    request,
+                    "Расписание успешно загружено и сохранено.",
+                    level="success",
                 )
 
+                if send_notifications:
+                    send_notification()
+                    self.message_user(
+                        request, "📢 Уведомления отправлены.", level="info"
+                    )
+
+            except Exception as e:
+                self.message_user(request, f"Ошибка: {str(e)}", level="error")
+                return redirect(".")
+
+        # Форма для GET-запроса
         class UploadFileForm(forms.Form):
             html_file = forms.FileField(label="Выберите HTML файл")
 
@@ -77,29 +95,28 @@ class MyAdminSite(admin.AdminSite):
         return render(request, "admin/add.html", {"form": form})
 
 
-# Заменяем стандартный admin.site на наш кастомный
 admin_site = MyAdminSite()
 
 
-# Затем регистрируем все модели через наш кастомный admin_site
 class ClientAdmin(admin.ModelAdmin):
     list_display = ("client_name", "is_teacher")
     list_filter = ("client_name", "is_teacher")
 
 
-class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ("client", "date")
-    list_filter = ("date",)
+class ScheduleDayAdmin(admin.ModelAdmin):
+    list_display = ("client_name", "date")
+    list_filter = ("date", "client")
+
+    def client_name(self, obj):
+        return obj.client.client_name
+
+    client_name.short_description = "Клиент"
+    client_name.admin_order_field = "client__client_name"
 
 
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ("schedule", "number")
-    list_filter = ("schedule", "number")
-
-
-class ItemLessonAdmin(admin.ModelAdmin):
-    list_display = ("lesson", "title", "type", "partner", "location")
-    list_filter = ("title", "type", "partner", "location")
+    list_display = ("schedule", "number", "title", "type", "partner", "location")
+    list_filter = ("schedule", "number", "title", "type", "partner", "location")
 
 
 class ScheduleFileAdmin(admin.ModelAdmin):
@@ -108,8 +125,7 @@ class ScheduleFileAdmin(admin.ModelAdmin):
 
 
 admin_site.register(Client, ClientAdmin)
-admin_site.register(Schedule, ScheduleAdmin)
+admin_site.register(ScheduleDay, ScheduleDayAdmin)
 admin_site.register(Lesson, LessonAdmin)
-admin_site.register(ItemLesson, ItemLessonAdmin)
 admin_site.register(ScheduleFile, ScheduleFileAdmin)
 admin_site.register(User, UserAdmin)
