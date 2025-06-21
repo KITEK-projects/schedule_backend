@@ -1,14 +1,14 @@
 from django.contrib import admin, messages
 from django.shortcuts import redirect, render
-from schedule_api.models import *
-from schedule_api.services import set_schedule
+from .models import *
+from .services import set_schedule
 from django.urls import path
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from django.shortcuts import render, redirect
 from .notification import send_notification
-from schedule_api.models import Client, ScheduleDay, Lesson, ScheduleFile
+from .models import Client, ScheduleDay, Lesson, ScheduleFile
 from django import forms
 from datetime import datetime
 

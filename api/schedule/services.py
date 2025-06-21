@@ -1,8 +1,8 @@
 from datetime import datetime, date
 from typing import List
-from schedule_api.models import Client, Lesson, ScheduleDay, ScheduleFile
-from schedule_api.parsers import html_parse
-from schedule_api.schemas import ClientSchema, LessonSchema
+from schedule.models import Client, Lesson, ScheduleDay, ScheduleFile
+from schedule.parsers import html_parse
+from schedule.schemas import ClientSchema, LessonSchema
 
 
 def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema:

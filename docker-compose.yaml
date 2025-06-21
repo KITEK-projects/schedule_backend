@@ -47,17 +47,7 @@ services:
     networks:
       - schedule
 
-  glances:
-    image: nicolargo/glances
-    container_name: glances
-    restart: unless-stopped
-    pid: host
-    ports:
-      - "61208:61208"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /:/mnt:ro
-    command: glances -w
+
 
 networks:
   schedule:

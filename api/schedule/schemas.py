@@ -1,6 +1,5 @@
 from typing import List, Optional
 from ninja import Schema
-from .models import Client, Lesson, ScheduleDay
 
 
 class LessonItemSchema(Schema):

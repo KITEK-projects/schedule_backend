@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', models.DateField()),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='schedule_days', to='schedule_api.client')),
+                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='schedule_days', to='schedule.client')),
             ],
             options={
                 'ordering': ['date'],
@@ -50,7 +50,7 @@ class Migration(migrations.Migration):
                 ('type', models.CharField(max_length=50)),
                 ('partner', models.CharField(max_length=255)),
                 ('location', models.CharField(blank=True, max_length=50, null=True)),
-                ('schedule', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='lessons', to='schedule_api.scheduleday')),
+                ('schedule', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='lessons', to='schedule.scheduleday')),
             ],
             options={
                 'ordering': ['number'],

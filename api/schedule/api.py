@@ -1,24 +1,21 @@
-from ninja import NinjaAPI
+from ninja import NinjaAPI, Router
 from ninja.errors import HttpError
 from django.http import HttpRequest
 
 from datetime import datetime
 
-from schedule_api.services import get_schedule_for_client
-
+from schedule.services import get_schedule_for_client
 
 from .models import Client
 from .schemas import ClientSchema
 
-
-api = NinjaAPI()
-
+router = Router()
 
 def is_admin(user):
     return user.is_staff
 
 
-@api.get("/clients/", response=list[str], summary="Получение клиентов")
+@router.get("/clients/", response=list[str], summary="Получение клиентов")
 def get_clients(request: HttpRequest, is_teacher: bool = False):
     "Получение списка клиентов по is_teacher"
     clientsDjangoModel = Client.objects.filter(is_teacher=is_teacher)
@@ -26,7 +23,7 @@ def get_clients(request: HttpRequest, is_teacher: bool = False):
     return clients
 
 
-@api.get("/schedule/", response=ClientSchema, summary="Получение расписания")
+@router.get("/schedule/", response=ClientSchema, summary="Получение расписания")
 def get_schedule(request: HttpRequest, client_name: str):
     "Получение списка расписания по клиенту и времени"
     client_time_str = request.headers.get("X-CLIENT-TIME")

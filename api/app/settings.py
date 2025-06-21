@@ -35,7 +35,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -43,9 +43,12 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
-    "schedule_api.apps.ScheduleApiConfig",
+    "schedule.apps.ScheduleConfig",
+    "rustore.apps.RustoreConfig",
+
     "corsheaders",
     "ninja",
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -90,7 +93,7 @@ CORS_ALLOW_HEADERS = [
     "X-CLIENT-TIME",
 ]
 
-ROOT_URLCONF = "schedule.urls"
+ROOT_URLCONF = "app.urls"
 
 TEMPLATES = [
     {
@@ -108,7 +111,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "schedule.wsgi.application"
+WSGI_APPLICATION = "app.wsgi.application"
 
 
 # Database
