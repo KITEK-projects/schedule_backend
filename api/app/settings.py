@@ -35,7 +35,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -45,10 +45,8 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     "schedule.apps.ScheduleConfig",
     "rustore.apps.RustoreConfig",
-
     "corsheaders",
     "ninja",
-
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

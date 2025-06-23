@@ -48,6 +48,11 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
             }
         )
 
+    if len(data["schedules"]) == 0:
+        data["schedules"].append(
+            {"date": client_time.strftime("%Y-%m-%d"), "lessons": []}
+        )
+
     return data
 
 
