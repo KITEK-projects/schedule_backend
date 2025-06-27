@@ -8,5 +8,7 @@ api = NinjaAPI(
    description="Эта спецификация содержит актуальное описания API для приложения КИТЕКА.",
 )
 
-api.add_router("/", schedule_router, tags=["schedule"]) 
-api.add_router("/rustore/", rustore_router, tags=["rustore"])
+
+api.add_router("/schedule", schedule_router, tags=["schedule"])
+
+api.add_router("/rustore", rustore_router, tags=["rustore"])

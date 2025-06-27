@@ -1,6 +1,6 @@
 services:
-  schedule-db:
-    container_name: schedule-db
+  db:
+    container_name: db
     image: postgres
     restart: always
     environment:
@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - schedule
+      - main
     healthcheck:
       # Добавлено для проверки состояния базы данных
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
@@ -20,37 +20,38 @@ services:
       timeout: 2s
       retries: 5
 
-  schedule-web:
-    container_name: schedule-web
-    image: nginx
-    restart: always
-    volumes:
-      - ./web/kitek/dist/:/usr/share/nginx/html:ro
-    ports:
-      - "8080:80"
-    environment:
-      - NGINX_PORT=80
-    networks:
-      - schedule
+  # web:
+  #   container_name: web
+  #   image: nginx
+  #   restart: always
+  #   volumes:
+  #     - ./web/kitek/dist/:/usr/share/nginx/html:ro
+  #   ports:
+  #     - "8080:80"
+  #   environment:
+  #     - NGINX_PORT=80
+  #   networks:
+  #     - main
 
-  schedule-api:
-    container_name: schedule-api
+  api:
+    container_name: api
     build: api/
     restart: always
     ports:
       - "8000:8000"
     depends_on:
-      schedule-db:
+      db:
         condition: service_healthy
     volumes:
       - /home/xaori/schedule_backend/api/media/:/app/media
+      - /home/xaori/schedule_backend/api/static/:/app/static
     networks:
-      - schedule
+      - main
 
 
 
 networks:
-  schedule:
+  main:
     external: true
-    name: schedule
+    name: main
     driver: bridge

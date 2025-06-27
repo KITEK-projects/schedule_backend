@@ -1,39 +1,49 @@
-from ninja import NinjaAPI, Router
+from typing import Optional
+from ninja import Header, Router
 from ninja.errors import HttpError
 from django.http import HttpRequest
+from django.utils import timezone
 
 from datetime import datetime
 
 from schedule.services import get_schedule_for_client
 
 from .models import Client
-from .schemas import ClientSchema
+from .schemas import ClientListSchema, ClientSchema
 
 router = Router()
+
 
 def is_admin(user):
     return user.is_staff
 
 
-@router.get("/clients/", response=list[str], summary="Получение клиентов")
-def get_clients(request: HttpRequest, is_teacher: bool = False):
-    "Получение списка клиентов по is_teacher"
-    clientsDjangoModel = Client.objects.filter(is_teacher=is_teacher)
-    clients = [i.client_name for i in clientsDjangoModel]
-    return clients
+@router.get("/clients", response=ClientListSchema, summary="Получение клиентов")
+def get_clients(request: HttpRequest):
+    "Получение списка клиентов (группы и учителя)"
+    groups = Client.objects.filter(is_teacher=False)
+    teachers = Client.objects.filter(is_teacher=True)
+    return ClientListSchema(
+        groups=[group.client_name for group in groups],
+        teachers=[teacher.client_name for teacher in teachers],
+    )
 
 
-@router.get("/schedule/", response=ClientSchema, summary="Получение расписания")
-def get_schedule(request: HttpRequest, client_name: str):
+@router.get("", response=ClientSchema, summary="Получение расписания")
+def get_schedule(
+    request: HttpRequest,
+    client_name: str,
+    x_client_time: Optional[str] = Header(None, alias="X-CLIENT-TIME"),
+):
     "Получение списка расписания по клиенту и времени"
-    client_time_str = request.headers.get("X-CLIENT-TIME")
-
-    if not client_time_str:
-        raise HttpError(400, "Заголовок 'X-CLIENT-TIME' обязателен")
-
-    try:
-        client_time = datetime.fromisoformat(client_time_str).date()
-    except ValueError:
-        raise HttpError(400, "Некорректный формат 'X-CLIENT-TIME', ожидается ISO 8601")
+    if x_client_time:
+        try:
+            client_time = datetime.fromisoformat(x_client_time).date()
+        except ValueError:
+            raise HttpError(
+                400, "Некорректный формат 'X-CLIENT-TIME', ожидается ISO 8601"
+            )
+    else:
+        client_time = timezone.localdate()
 
     return get_schedule_for_client(client_name, client_time)

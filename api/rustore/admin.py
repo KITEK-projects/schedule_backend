@@ -1,5 +1,5 @@
 from django.contrib import admin
-from schedule.admin import admin_site
+from app.admin import admin_site
 from rustore.models import RustoreVersion
 
 class RustoreVersionAdmin(admin.ModelAdmin):

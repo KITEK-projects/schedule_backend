@@ -2,6 +2,11 @@ from typing import List, Optional
 from ninja import Schema
 
 
+class ClientListSchema(Schema):
+    groups: List[str]
+    teachers: List[str]
+
+
 class LessonItemSchema(Schema):
     title: str
     type: str

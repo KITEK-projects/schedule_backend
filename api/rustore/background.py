@@ -17,7 +17,7 @@ async def run_loop():
             )
         except Exception as e:
             logger.error(f"Ошибка при обновлении версии: {e}")
-        await asyncio.sleep(30)
+        await asyncio.sleep(30 * 60)  # 30 minutes   
 
 def start_background_tasks():
     loop = asyncio.new_event_loop()

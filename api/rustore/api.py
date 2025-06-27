@@ -1,11 +1,14 @@
+from typing import Dict
 from ninja import Router
+from pydantic import BaseModel
 from rustore.models import RustoreVersion
+from rustore.schemas import VersionSchema
 
 
 router = Router()
 
-@router.get("/get_version/", response=int, summary="Получение версии приложения")
-def get_version(request):
+@router.get("/version", response=VersionSchema, summary="Получение версии приложения")
+async def get_version(request):
     """
     Получение версии мобильного приложения.
     Возвращает версию мобильного приложения в виде целого числа.
@@ -13,7 +16,13 @@ def get_version(request):
     """
   
     try:
-        version = RustoreVersion.objects.latest('versionCode')
-        return version.versionCode
+        version = await RustoreVersion.objects.alatest('versionCode')
+        return VersionSchema(
+            versionCode=version.versionCode,
+            versionName=version.versionName
+        )
     except RustoreVersion.DoesNotExist:
-        return 0
+        return VersionSchema(
+            versionCode=0,
+            versionName="0.0.0"
+        )

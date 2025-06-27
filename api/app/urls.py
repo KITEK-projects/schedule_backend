@@ -16,12 +16,12 @@ Including another URLconf
 """
 
 from django.urls import path, include
+from .admin import admin_site
 
-from .api import api
+from app.api import api
 
 
 urlpatterns = [
     path("api/v1/", api.urls),
-    path("api/v1/", include("schedule.urls")),
-    path("api/v1/rustore/", include("rustore.urls")),
+    path("api/v1/admin/", admin_site.urls), 
 ]
