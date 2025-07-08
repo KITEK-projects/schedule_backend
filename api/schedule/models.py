@@ -1,9 +1,16 @@
 from django.db import models
+from django.utils.timezone import now
 
 
 class Client(models.Model):
     client_name = models.CharField(max_length=255, unique=True)
+    ascii_name = models.CharField(max_length=255, blank=True)
     is_teacher = models.BooleanField(default=False)
+    last_update = models.DateTimeField(default=now)
+
+    def update_last_modified(self):
+        self.last_update = now()
+        self.save(update_fields=["last_update"])
 
     def __str__(self):
         return self.client_name

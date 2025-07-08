@@ -4,13 +4,17 @@ from typing import List
 from schedule.models import Client, Lesson, ScheduleDay, ScheduleFile
 from schedule.parsers import html_parse
 from schedule.schemas import ClientSchema, LessonSchema
+from schedule.notification import send_notifications
+from schedule.helpers import make_topic_name
 
 
 def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema:
     scheduleDays = ScheduleDay.objects.filter(client__client_name=client_name)
+    client = Client.objects.filter(client_name=client_name).first()
 
     data: ClientSchema = {
-        "client_name": client_name,
+        "client_name": client.client_name,
+        "last_update": client.last_update.isoformat(timespec="minutes"),
         "schedules": [],
     }
 
@@ -57,36 +61,42 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
     return data
 
 
-def set_schedule(content, uploaded_file) -> None:
-    start_time = time.perf_counter()
+def set_schedule(content, uploaded_file, is_send_notifications: bool) -> None:
+    clients = []
     parsed_data = html_parse(content)
     for item in parsed_data:
         client, _ = Client.objects.get_or_create(
-            client_name=item["client_name"], is_teacher=item["is_teacher"]
+            client_name=item["client_name"], is_teacher=item["is_teacher"], ascii_name=make_topic_name(item["client_name"])
         )
+        clients.append(client)
         for schedule in item["schedules"]:
-            scheduleDay, _ =  ScheduleDay.objects.get_or_create(
+            scheduleDay, _ = ScheduleDay.objects.get_or_create(
                 date=datetime.fromisoformat(schedule["date"]).date(),
                 client=client,
             )
 
-            scheduleDay.lessons.all().delete()  
-            
+            scheduleDay.lessons.all().delete()
+
             lesson_to_create = []
             for lesson in schedule["lessons"]:
-                lesson_to_create.append(Lesson(
-                    schedule=scheduleDay,
-                    number=lesson["number"],
-                    title=lesson["title"],
-                    type=lesson["type"],
-                    partner=lesson["partner"],
-                    location=lesson.get("location", ""),
-                ))
+                lesson_to_create.append(
+                    Lesson(
+                        schedule=scheduleDay,
+                        number=lesson["number"],
+                        title=lesson["title"],
+                        type=lesson["type"],
+                        partner=lesson["partner"],
+                        location=lesson.get("location", ""),
+                    )
+                )
             Lesson.objects.bulk_create(lesson_to_create)
+
+        client.update_last_modified()
+
+    if is_send_notifications:
+        send_notifications(clients)
 
     ScheduleFile.objects.create(
         file_name=uploaded_file.name,
         schedule_file=uploaded_file,
     )
-    duration = time.perf_counter() - start_time
-    print(f"⏱ Время выполнения set_schedule: {duration:.2f} секунд")

@@ -1,40 +1,26 @@
-from google.oauth2 import service_account
-import google.auth.transport.requests
-import requests
-import json
+from typing import List
+import firebase_admin
+from firebase_admin import credentials, messaging
 
 
-def send_notification():
-    SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"]
-    SERVICE_ACCOUNT_FILE = "service-account.json"
+def send_notifications(clients):
+    messages = []
+    for client in clients:
+        msg = messaging.Message(
+            notification=messaging.Notification(
+                title=f"📅 Появилось новое расписание для {client.client_name}",
+                body="Посмотри его в приложении",
+            ),
+            topic=client.ascii_name,
+        )
+        messages.append(msg)
+    try:
+        response = messaging.send_each(messages)
+    except Exception as e:
+        print(f"🔥 Ошибка при отправке уведомлений: {e}")
+        import traceback
 
-    credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES
-    )
+        traceback.print_exc()
+        return None
 
-    # 2. Получаем токен
-    auth_req = google.auth.transport.requests.Request()
-    credentials.refresh(auth_req)
-    token = credentials.token
-
-    # 3. Формируем запрос
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json; UTF-8",
-    }
-
-    project_id = "schedule-app-kiteka"
-    url = f"https://fcm.googleapis.com/v1/projects/{project_id}/messages:send"
-
-    message = {
-        "message": {
-            "topic": "update",
-            "notification": {
-                "title": "Появилось новое расписание 📅",
-                "body": "Посмотри его в приложении",
-            },
-        }
-    }
-
-    response = requests.post(url, headers=headers, data=json.dumps(message))
     return response

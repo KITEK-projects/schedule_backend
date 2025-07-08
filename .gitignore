@@ -1,7 +1,6 @@
-.env
-__pycache__
-.venv
+*.env
+*.venv
 db/
-__pycache__
+*.pyc
 media/
 service-account.json

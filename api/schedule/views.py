@@ -3,8 +3,6 @@ from django.shortcuts import redirect, render
 from .services import set_schedule
 from django import forms
 from django.shortcuts import render, redirect
-from .notification import send_notification
-from asgiref.sync import async_to_sync
 
 def upload_and_parse_html(admin_instance):
     def view(request):
@@ -34,7 +32,7 @@ def upload_and_parse_html(admin_instance):
             try:
                 content = uploaded_file.read().decode("windows-1251", errors="replace")
 
-                set_schedule(content, uploaded_file)
+                set_schedule(content, uploaded_file, send_notifications)
 
                 admin_instance.message_user(
                     request,
@@ -43,7 +41,6 @@ def upload_and_parse_html(admin_instance):
                 )
 
                 if send_notifications:
-                    send_notification()
                     admin_instance.message_user(
                         request, "📢 Уведомления отправлены.", level="info"
                     )
