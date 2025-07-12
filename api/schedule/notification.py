@@ -1,6 +1,4 @@
-from typing import List
-import firebase_admin
-from firebase_admin import credentials, messaging
+from firebase_admin import messaging
 
 
 def send_notifications(clients):

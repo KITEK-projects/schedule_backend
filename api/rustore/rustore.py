@@ -1,8 +1,6 @@
-import asyncio
 import os
 import base64
 import datetime
-import json
 from typing import Dict
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
@@ -60,13 +58,14 @@ async def get_current_version() -> Dict[str, str]:
         raise ValueError("RUSTORE_PACKAGE_NAME environment variable is not set")
 
     public_token = await auth()
+    headers = {
+        "Public-Token": public_token,
+        "Content-Type": "application/json",
+    }
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"https://public-api.rustore.ru/public/v1/application/{RUSTORE_PACKAGE_NAME}/version",
-            headers={
-                "Public-Token": public_token,
-                "Content-Type": "application/json",
-            },
+            headers=headers,
             params={
                 "filterTestingType": "RELEASE",
             },
@@ -75,11 +74,10 @@ async def get_current_version() -> Dict[str, str]:
         raise Exception(
             f"Failed to get version: {response.status_code} {response.text}"
         )
-    
-    version_obj = response.json()["body"]['content'][0]
+
+    version_obj = response.json()["body"]["content"][0]
 
     return {
         "version_name": version_obj["versionName"],
-        "version_code": version_obj["versionCode"]
+        "version_code": version_obj["versionCode"],
     }
-

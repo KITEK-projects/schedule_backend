@@ -1,32 +1,41 @@
 from datetime import datetime, date
-import time
+from operator import le
 from typing import List
 from schedule.models import Client, Lesson, ScheduleDay, ScheduleFile
 from schedule.parsers import html_parse
-from schedule.schemas import ClientSchema, LessonSchema
+from schedule.schemas import (
+    ClientSchema,
+    LessonItemSchema,
+    LessonSchema,
+    ScheduleDaySchema,
+)
 from schedule.notification import send_notifications
 from schedule.helpers import make_topic_name
+from ninja.errors import HttpError
 
 
 def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema:
     scheduleDays = ScheduleDay.objects.filter(client__client_name=client_name)
     client = Client.objects.filter(client_name=client_name).first()
 
-    data: ClientSchema = {
-        "client_name": client.client_name,
-        "last_update": client.last_update.isoformat(timespec="minutes"),
-        "schedules": [],
-    }
+    if client is None:
+        raise HttpError(404, "Client not found")
+
+    data = ClientSchema(
+        client_name=client.client_name,
+        ascii_name=client.ascii_name,
+        last_update=client.last_update.isoformat(timespec="minutes"),
+        schedules=[],
+    )
 
     for scheduleDay in scheduleDays:
         if scheduleDay.date < client_time:
-            # Пропускаем дни, которые раньше указанной даты
             continue
 
         date = scheduleDay.date.strftime("%Y-%m-%d")
         lessons: List[LessonSchema] = []
 
-        for lesson in scheduleDay.lessons.all():
+        for lesson in scheduleDay.lessons.all():  # type: ignore
             # Ищем существующий урок с таким номером
             local_lesson = next(
                 (obj for obj in lessons if obj.number == lesson.number), None
@@ -38,24 +47,23 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
 
             # Добавляем информацию об уроке
             local_lesson.items.append(
-                {
-                    "title": lesson.title,
-                    "type": lesson.type,
-                    "partner": lesson.partner,
-                    "location": lesson.location or "",
-                }
+                LessonItemSchema(
+                    title=lesson.title,
+                    type=lesson.type,
+                    partner=lesson.partner,
+                    location=lesson.location or "",
+                )
             )
 
-        data["schedules"].append(
-            {
-                "date": date,
-                "lessons": sorted(lessons, key=lambda x: x.number),
-            }
+        data.schedules.append(
+            ScheduleDaySchema(
+                date=date, lessons=sorted(lessons, key=lambda x: x.number)
+            )
         )
 
-    if len(data["schedules"]) == 0:
-        data["schedules"].append(
-            {"date": client_time.strftime("%Y-%m-%d"), "lessons": []}
+    if len(data.schedules) == 0:
+        data.schedules.append(
+            ScheduleDaySchema(date=client_time.strftime("%Y-%m-%d"), lessons=[])
         )
 
     return data
@@ -66,7 +74,9 @@ def set_schedule(content, uploaded_file, is_send_notifications: bool) -> None:
     parsed_data = html_parse(content)
     for item in parsed_data:
         client, _ = Client.objects.get_or_create(
-            client_name=item["client_name"], is_teacher=item["is_teacher"], ascii_name=make_topic_name(item["client_name"])
+            client_name=item["client_name"],
+            is_teacher=item["is_teacher"],
+            ascii_name=make_topic_name(item["client_name"]),
         )
         clients.append(client)
         for schedule in item["schedules"]:
@@ -75,7 +85,7 @@ def set_schedule(content, uploaded_file, is_send_notifications: bool) -> None:
                 client=client,
             )
 
-            scheduleDay.lessons.all().delete()
+            scheduleDay.lessons.all().delete()  # type: ignore
 
             lesson_to_create = []
             for lesson in schedule["lessons"]:

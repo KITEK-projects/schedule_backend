@@ -71,7 +71,7 @@ def html_parse(src):
 
     for client in clients:
         table = client.find_next_sibling("table")
-        trs = table.find_all("tr")
+        trs = table.find_all("tr") # type: ignore
 
         client_name = client.get_text().split(" ")[-1].strip("!*:.,")
         # Разделяем имя на буквы и цифры
@@ -81,7 +81,7 @@ def html_parse(src):
         schedule = []
 
         for tr in trs[1:]:
-            ths = tr.find_all("th")
+            ths = tr.find_all("th") # type: ignore
             if len(ths) == 2:
                 pre_date = ths[0].get_text().split(" ")[-1].split(".")
                 date = "-".join(reversed(pre_date))
@@ -89,10 +89,10 @@ def html_parse(src):
             else:
                 number = int(ths[0].get_text())
 
-            tds_soup = tr.find_all("td")
+            tds_soup = tr.find_all("td") # type: ignore
             tds = [
                 line.strip()
-                for line in tds_soup[0].decode_contents().split("<br/>")
+                for line in tds_soup[0].decode_contents().split("<br/>") # type: ignore
                 if line.strip() != ""
             ]
 
@@ -105,10 +105,10 @@ def html_parse(src):
             # Проверяем, есть ли содержимое в ячейке
             if tds_soup[0].get_text().strip() == "&nbsp;" or not tds:
                 # Если день уже существует, пропускаем
-                if schedule and schedule[-1]["date"] == date:
+                if schedule and schedule[-1]["date"] == date: # type: ignore
                     continue
                 # Добавляем пустой день
-                schedule.append({"date": date, "lessons": []})
+                schedule.append({"date": date, "lessons": []}) # type: ignore
                 continue
 
             tds_info = [tds]
@@ -122,7 +122,7 @@ def html_parse(src):
                                 "title": i[0].capitalize(),
                                 "type": i[1].strip("()"),
                                 "partner": i[2],
-                                "location": location[0],
+                                "location": location[0], # type: ignore
                             }
                         ]
                     elif len(i) == 6:
@@ -132,21 +132,21 @@ def html_parse(src):
                                 "title": i[0].capitalize(),
                                 "type": i[1].strip("()"),
                                 "partner": i[2],
-                                "location": location[0],
+                                "location": location[0], # type: ignore
                             },
                             {
                                 "number": number,
                                 "title": i[3].capitalize(),
                                 "type": i[4].strip("()"),
                                 "partner": i[5],
-                                "location": location[1],
+                                "location": location[1], # type: ignore
                             },
                         ]
 
-                    if schedule and schedule[-1]["date"] == date:
-                        schedule[-1]["lessons"].extend(lesson)
+                    if schedule and schedule[-1]["date"] == date: # type: ignore
+                        schedule[-1]["lessons"].extend(lesson) # type: ignore
                     else:
-                        schedule.append({"date": date, "lessons": lesson})
+                        schedule.append({"date": date, "lessons": lesson}) # type: ignore
             tds_info = []
 
         for entry in data:

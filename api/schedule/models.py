@@ -15,9 +15,6 @@ class Client(models.Model):
     def __str__(self):
         return self.client_name
 
-    # class Meta:
-    #     # ordering = ["name"]
-
 
 class ScheduleDay(models.Model):
     date = models.DateField()

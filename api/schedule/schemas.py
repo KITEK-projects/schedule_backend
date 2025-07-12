@@ -1,5 +1,5 @@
 from typing import List, Optional
-from ninja import Schema
+from ninja import Field, Schema
 
 
 class ClientListSchema(Schema):
@@ -28,4 +28,4 @@ class ClientSchema(Schema):
     client_name: str
     ascii_name: str
     last_update: str
-    schedules: List[ScheduleDaySchema]
+    schedules: List[ScheduleDaySchema] = Field(default_factory=list)

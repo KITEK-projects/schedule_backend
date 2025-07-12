@@ -33,9 +33,10 @@ def get_clients(request: HttpRequest):
 def get_schedule(
     request: HttpRequest,
     client_name: str,
-    x_client_time: Optional[str] = Header(None, alias="X-CLIENT-TIME"),
+    x_client_time: Optional[str] = Header(default=None, alias="X-CLIENT-TIME") # type: ignore
 ):
     "Получение списка расписания по клиенту и времени"
+
     if x_client_time:
         try:
             client_time = datetime.fromisoformat(x_client_time).date()

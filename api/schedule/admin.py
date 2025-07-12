@@ -15,12 +15,6 @@ class ScheduleDayAdmin(admin.ModelAdmin):
     list_display = ("client_name", "date")
     list_filter = ("date", "client")
 
-    def client_name(self, obj):
-        return obj.client.client_name
-
-    client_name.short_description = "Клиент"
-    client_name.admin_order_field = "client__client_name"
-
 
 class LessonAdmin(admin.ModelAdmin):
     list_display = ("schedule", "number", "title", "type", "partner", "location")

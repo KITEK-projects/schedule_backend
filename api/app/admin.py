@@ -3,7 +3,6 @@ from django.urls import path
 
 from admin_interface.models import Theme
 from admin_interface.admin import ThemeAdmin
-from django.contrib.admin.sites import AlreadyRegistered
 
 from schedule.views import upload_and_parse_html
 
@@ -43,5 +42,5 @@ admin_site = MyAdminSite()
 
 try:
     admin_site.register(Theme, ThemeAdmin)
-except AlreadyRegistered:
+except:
     pass
