@@ -46,8 +46,11 @@ INSTALLED_APPS = [
     # Приложения проекта
     "schedule.apps.ScheduleConfig",
     "rustore.apps.RustoreConfig",
+    "my_auth.apps.MyAuthConfig",
     "corsheaders",
     "ninja",
+    "ninja_extra",
+    'ninja_jwt',
     # Для красивой админки
     "colorfield",
     "admin_interface",
@@ -151,7 +154,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -186,3 +188,6 @@ CACHES = {
         "LOCATION": "unique-snowflake",
     }
 }
+
+
+AUTH_USER_MODEL = 'my_auth.MyUser'

@@ -12,7 +12,7 @@ class ClientAdmin(admin.ModelAdmin):
 
 
 class ScheduleDayAdmin(admin.ModelAdmin):
-    list_display = ("client_name", "date")
+    list_display = ("client", "date")
     list_filter = ("date", "client")
 
 
