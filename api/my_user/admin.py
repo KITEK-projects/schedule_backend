@@ -1,7 +1,7 @@
 from django.contrib import admin
 from app.admin import admin_site
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from my_auth.models import Group, MyUser
+from my_user.models import Group, MyUser
 
 
 class MyUserAdmin(BaseUserAdmin):

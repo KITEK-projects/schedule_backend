@@ -1,11 +1,18 @@
 from ninja import Router
+from app.auth import JWTAuth
 from rustore.models import RustoreVersion
 from rustore.schemas import VersionSchema
 
 router = Router()
+jwt_auth = JWTAuth()
 
 
-@router.get("/version", response=VersionSchema, summary="Получение версии приложения")
+@router.get(
+    "/version",
+    response=VersionSchema,
+    summary="Получение версии приложения",
+    auth=jwt_auth,
+)
 async def get_version(request):
     """
     Получение версии мобильного приложения.

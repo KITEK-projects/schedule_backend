@@ -5,6 +5,7 @@ class ROLE_CHOICES(models.TextChoices):
         ANONYMOUS = "AS", ("anonymous")
         STUDENT = "ST", ("student")
         TEACHER = "TR", ("teacher")
+        ADMIN = "AM", ("admin")
 
 class MyUser(AbstractUser):
     

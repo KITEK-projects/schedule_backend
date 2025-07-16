@@ -5,4 +5,5 @@ db/
 media/
 service-account.json
 api/poetry.lock
+**/migrations/
 
