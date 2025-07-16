@@ -22,6 +22,6 @@ from app.api import api
 
 
 urlpatterns = [
-    path("api/v1/", api.urls),
-    path("api/v1/admin/", admin_site.urls), 
+    path("api/", api.urls),
+    path("api/admin/", admin_site.urls), 
 ]
