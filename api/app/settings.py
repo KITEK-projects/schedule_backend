@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     # Приложения проекта
     "schedule.apps.ScheduleConfig",
     "rustore.apps.RustoreConfig",
-    "my_auth.apps.MyAuthConfig",
+    "my_user.apps.MyUserConfig",
     "corsheaders",
     "ninja",
     "ninja_extra",
@@ -190,4 +190,4 @@ CACHES = {
 }
 
 
-AUTH_USER_MODEL = 'my_auth.MyUser'
+AUTH_USER_MODEL = 'my_user.MyUser'

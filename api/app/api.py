@@ -3,7 +3,7 @@ from ninja_jwt.controller import NinjaJWTDefaultController
 
 from schedule.api import router as schedule_router
 from rustore.api import router as rustore_router
-from my_auth.api import router as auth_router
+from my_user.api import router as auth_router
 
 api = NinjaExtraAPI(
     title="Апи Приложения КИТЕКА",
