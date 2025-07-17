@@ -36,7 +36,7 @@ def add_user(request, data: UserCreate):
 
 
 @router.get("", auth=jwt_auth, response=UserOut)
-def retrive_user(request, username: str) -> UserOut:
+def retrieve_user(request, username: str) -> UserOut:
     """Получение пользователя по username"""
     user = MyUser.objects.filter(username=username).first()
     if not user:

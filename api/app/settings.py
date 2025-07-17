@@ -47,10 +47,11 @@ INSTALLED_APPS = [
     "schedule.apps.ScheduleConfig",
     "rustore.apps.RustoreConfig",
     "my_user.apps.MyUserConfig",
+    "certs.apps.CertsConfig",
     "corsheaders",
     "ninja",
     "ninja_extra",
-    'ninja_jwt',
+    "ninja_jwt",
     # Для красивой админки
     "colorfield",
     "admin_interface",
@@ -61,7 +62,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-]    
+]
 
 
 MIDDLEWARE = [
@@ -190,4 +191,4 @@ CACHES = {
 }
 
 
-AUTH_USER_MODEL = 'my_user.MyUser'
+AUTH_USER_MODEL = "my_user.MyUser"
