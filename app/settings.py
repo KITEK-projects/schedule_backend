@@ -18,10 +18,10 @@ dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
 
 config = load_dotenv(dotenv_path)
 key = os.getenv("SECRET_KEY")
-host = os.getenv("HOST")
-user = os.getenv("DB_USER")
-password = os.getenv("PASSWORD")
-name = os.getenv("DB_NAME")
+host = os.getenv("POSTGRES_HOST")
+user = os.getenv("POSTGRES_USER")
+password = os.getenv("POSTGRES_PASSWORD")
+name = os.getenv("POSTGRES_DB_NAME")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

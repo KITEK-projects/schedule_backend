@@ -22,7 +22,6 @@ def generate_signature(key_id, private_key_content):
         timespec="milliseconds"
     )
     message_to_sign = key_id + timestamp
-    print("Message to sign:", message_to_sign)
 
     hash_obj = SHA512.new(message_to_sign.encode())
     signer = pkcs1_15.new(private_key)

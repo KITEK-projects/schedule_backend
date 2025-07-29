@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django artifacts
+*.sqlite3
+*.log
+media/
+static/
+pgdata/
+
+# Git and local files
+.git/
+.gitignore
+.env
+*.pem
+*.crt
+*.key
+*.json  # если у тебя чувствительные json, типа service-account.json
+
+# Dev files
+*.swp
+.idea/
+.vscode/
+
+# Docker files themselves (не обязательно)
+Dockerfile
+docker-compose.yml

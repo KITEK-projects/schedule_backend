@@ -1,9 +1,12 @@
 *.env
 *.venv
-db/
+pgdata/
 *.pyc
 media/
 service-account.json
-api/poetry.lock
-**/migrations/
+poetry.lock
 
+__pycache__
+
+media/
+static/

@@ -1,0 +1,55 @@
+#########################
+# api/Dockerfile
+#########################
+
+# ----------------------
+# Общий базовый слой
+# ----------------------
+FROM python:3.12-slim AS base
+
+# Не буферизируем вывод Python
+ENV PYTHONUNBUFFERED=1
+
+# Установка Poetry
+RUN pip install --no-cache-dir poetry
+
+# Рабочая директория
+WORKDIR /app
+
+# Копируем манифесты зависимостей
+COPY pyproject.toml poetry.lock ./
+
+# Предварительно загружаем зависимости Poetry для кеша
+RUN poetry install --no-root --only main
+
+# ----------------------
+# Этап разработки
+# ----------------------
+FROM base AS dev
+
+# Устанавливаем все зависимости (включая dev)
+RUN poetry install --no-root
+
+# Копируем код приложения
+COPY . .
+
+# Команды миграций и статики при старте
+CMD ["sh", "-c", \
+    "poetry run python manage.py migrate && \
+     poetry run python manage.py runserver 0.0.0.0:8000"]
+
+# ----------------------
+# Этап продакшена
+# ----------------------
+FROM base AS prod
+
+# Копируем код приложения
+COPY . .
+
+# Выполняем миграции и собираем статику
+RUN python manage.py makemigrations \
+    && python manage.py migrate \
+    && python manage.py collectstatic --noinput
+
+# Запуск без --reload, с несколькими воркерами
+CMD ["uvicorn", "app.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
