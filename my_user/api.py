@@ -1,9 +1,9 @@
 from ninja import Router
-from ninja_jwt.tokens import RefreshToken
+from ninja_jwt.tokens import RefreshToken, AccessToken
 from django.contrib.auth import get_user_model
 
 from app.auth import JWTAuth
-from .schemas import UserCreate, TokenOut, UserOut, UserUpdate
+from .schemas import UserCreate, TokenResponse, UserOut, UserUpdate
 from ninja.errors import HttpError
 from django.http import HttpRequest
 
@@ -15,10 +15,10 @@ jwt_auth = JWTAuth()
 User = get_user_model()
 
 
-@router.post("", response=TokenOut)
+@router.post("", response=TokenResponse)
 def add_user(request, data: UserCreate):
     """Создание пользователя"""
-    if User.objects.filter(username=data.username).exists():
+    if MyUser.objects.filter(username=data.username).exists():
         raise HttpError(400, "Пользователь с таким username уже существует")
 
     user = MyUser.objects.create_user(
@@ -28,11 +28,9 @@ def add_user(request, data: UserCreate):
         password=data.password,  # Хешируется автоматически
     )
 
-    refresh = RefreshToken.for_user(user)
-    return {
-        "access": str(refresh.access_token),
-        "refresh": str(refresh),
-    }
+    refresh = str(RefreshToken.for_user(user))
+    access = str(AccessToken.for_user(user))
+    return TokenResponse(success=True, access=access, refresh=refresh)
 
 
 @router.get("", auth=jwt_auth, response=UserOut)

@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 from ninja import Field, Schema
 
@@ -23,9 +24,10 @@ class UserOut(Schema):
     role: str
 
 
-class TokenOut(BaseModel):
-    access: str
-    refresh: str
+class TokenResponse(BaseModel):
+    success: bool
+    access: Optional[str] = None
+    refresh: Optional[str] = None
 
 
 class TokenRefreshIn(BaseModel):

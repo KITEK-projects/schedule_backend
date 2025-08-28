@@ -7,6 +7,7 @@ from app.admin import admin_site
 
 
 class ClientAdmin(admin.ModelAdmin):
+    search_fields = ("client_name", )
     list_display = ("client_name", "is_teacher")
     list_filter = ("client_name", "is_teacher")
 

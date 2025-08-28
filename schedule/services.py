@@ -24,7 +24,7 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
     data = ClientSchema(
         client_name=client.client_name,
         ascii_name=client.ascii_name,
-        last_update=client.last_update.isoformat(timespec="minutes"),
+        last_update=client.last_update.strftime("%d.%m.%y"),
         schedules=[],
     )
 
