@@ -47,12 +47,8 @@ INSTALLED_APPS = [
     # Приложения проекта
     "schedule.apps.ScheduleConfig",
     "rustore.apps.RustoreConfig",
-    "my_user.apps.MyUserConfig",
-    "certs.apps.CertsConfig",
     "corsheaders",
     "ninja",
-    "ninja_extra",
-    "ninja_jwt",
     # Для красивой админки
     "colorfield",
     "admin_interface",
@@ -190,13 +186,3 @@ CACHES = {
         "LOCATION": "unique-snowflake",
     }
 }
-
-
-NINJA_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(weeks=10),
-    'AUTH_TOKEN_CLASSES': ('ninja_jwt.tokens.AccessToken',)
-}
-
-
-AUTH_USER_MODEL = "my_user.MyUser"

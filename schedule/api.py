@@ -6,23 +6,19 @@ from django.utils import timezone
 
 from datetime import datetime
 
-from app.auth import JWTAuth
 from schedule.services import get_schedule_for_client
 
 from .models import Client
 from .schemas import ClientListSchema, ClientSchema
 
 router = Router()
-jwt_auth = JWTAuth()
 
 
 def is_admin(user):
     return user.is_staff
 
 
-@router.get(
-    "/clients", response=ClientListSchema, summary="Получение клиентов", auth=jwt_auth
-)
+@router.get("/clients", response=ClientListSchema, summary="Получение клиентов")
 def get_clients(request: HttpRequest):
     "Получение списка клиентов (группы и учителя)"
     groups = Client.objects.filter(is_teacher=False)
@@ -33,11 +29,11 @@ def get_clients(request: HttpRequest):
     )
 
 
-@router.get("", response=ClientSchema, summary="Получение расписания", auth=jwt_auth)
+@router.get("", response=ClientSchema, summary="Получение расписания")
 def get_schedule(
     request: HttpRequest,
     client_name: str,
-    x_client_time: Optional[str] = Header(default=None, alias="X-CLIENT-TIME"),  # type: ignore
+    x_client_time: Optional[str] = Header(default=None, alias="X-CLIENT-TIME"),
 ):
     "Получение списка расписания по клиенту и времени"
 

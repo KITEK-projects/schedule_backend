@@ -23,7 +23,6 @@ dependencies = [
     "unidecode (>=1.4.0,<2.0.0)",
     "uvicorn (>=0.35.0,<0.36.0)",
     "pycryptodome (>=3.23.0,<4.0.0)",
-    "django-ninja-jwt (>=5.3.7,<6.0.0)"
 ]
 
 
