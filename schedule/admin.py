@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Client, ScheduleDay, Lesson, ScheduleFile
+from .models import Client, ScheduleDay, Lesson, ScheduleFile, TimeOfBell
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from .models import Client, ScheduleDay, Lesson, ScheduleFile
@@ -7,7 +7,7 @@ from app.admin import admin_site
 
 
 class ClientAdmin(admin.ModelAdmin):
-    search_fields = ("client_name", )
+    search_fields = ("client_name",)
     list_display = ("client_name", "is_teacher")
     list_filter = ("client_name", "is_teacher")
 
@@ -27,8 +27,13 @@ class ScheduleFileAdmin(admin.ModelAdmin):
     list_filter = ("file_name", "created_at")
 
 
+class TimeOfBellAdmin(admin.ModelAdmin):
+    list_display = ("id", "lesson", "use_curator_hour", "curator_hour")
+
+
 admin_site.register(Client, ClientAdmin)
 admin_site.register(ScheduleDay, ScheduleDayAdmin)
 admin_site.register(Lesson, LessonAdmin)
 admin_site.register(ScheduleFile, ScheduleFileAdmin)
 admin_site.register(User, UserAdmin)
+admin_site.register(TimeOfBell, TimeOfBellAdmin)

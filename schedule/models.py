@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db import models
 from django.utils.timezone import now
 
@@ -24,6 +25,14 @@ class ScheduleDay(models.Model):
 
     def __str__(self):
         return self.date.strftime("%d.%m.%Y")
+    
+    @property
+    def weekday(self) -> int:
+        return self.date.weekday()
+    
+    @property
+    def format_date(self) -> str:
+        return self.date.strftime("%d.%m.%y")
 
     class Meta:
         ordering = ["date"]
@@ -48,3 +57,28 @@ class ScheduleFile(models.Model):
     file_name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     schedule_file = models.FileField()
+
+
+class TimeOfBell(models.Model):
+    start_time = models.TimeField(
+        default="08:45",
+        help_text="Время начала первой пары"
+    )
+    lesson = models.PositiveIntegerField(default=90, help_text="Врема пары")
+    use_curator_hour = models.BooleanField(default=True, help_text="Включать кураторский час по понедельникам")
+    curator_hour = models.PositiveIntegerField(default=40, help_text="Время кураторского часа")
+    lunch_break_offset = models.PositiveIntegerField(default=5, help_text="Смещение обеденного перерыва, по понедельникам")
+    lunch_break = models.PositiveIntegerField(default=30, help_text="Время обеденного перерыва")
+    break_after_1 = models.PositiveIntegerField(default=10, help_text="Перемена после первой пары")
+    break_after_2 = models.PositiveIntegerField(default=10, help_text="Перемена после второй пары")
+    break_after_3 = models.PositiveIntegerField(default=10, help_text="Перемена после третьей пары")
+    break_after_4 = models.PositiveIntegerField(default=10, help_text="Перемена после четвертой пары")
+    break_after_5 = models.PositiveIntegerField(default=5, help_text="Перемена после пятой пары")
+
+    def get_start_timedelta(self) -> timedelta:
+        """Переводит start_time в timedelta (удобно для расчётов)."""
+        return timedelta(
+            hours=self.start_time.hour,
+            minutes=self.start_time.minute
+        )
+    

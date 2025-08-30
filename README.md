@@ -25,3 +25,14 @@ docker compose --profile prod up --build
 ```bash
 docker compose --profile dev up --build
 ```
+
+**Миграции:**
+```bash
+docker exec -it omsktec-api poetry run python manage.py makemigrations
+docker exec -it omsktec-api poetry run python manage.py migrate
+```
+
+**Тесты:**
+```bash
+docker exec -it omsktec-api poetry run python manage.py test
+```

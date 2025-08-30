@@ -22,12 +22,12 @@ services:
       timeout: 1s
       retries: 5
 
-  api:
+  api-dev:
     container_name: omsktec-api
     build:
       context: .
       dockerfile: Dockerfile
-      target: ${BUILD_TARGET:-dev}
+      target: dev
     ports:
       - "8000:8000"
     env_file:
@@ -48,4 +48,27 @@ services:
         read_only: ${READ_ONLY_CODE:-false}
     profiles:
       - dev
+
+  
+  api:
+    container_name: omsktec-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./media
+        target: /app/media
+      - type: bind
+        source: ./static
+        target: /app/static
+    profiles:
       - prod

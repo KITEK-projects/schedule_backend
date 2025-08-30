@@ -3,6 +3,7 @@ from ninja import Header, Router
 from ninja.errors import HttpError
 from django.http import HttpRequest
 from django.utils import timezone
+from django.views.decorators.cache import cache_page
 
 from datetime import datetime
 
@@ -17,7 +18,7 @@ router = Router()
 def is_admin(user):
     return user.is_staff
 
-
+@cache_page(timeout=60*15, key_prefix="clients")
 @router.get("/clients", response=ClientListSchema, summary="Получение клиентов")
 def get_clients(request: HttpRequest):
     "Получение списка клиентов (группы и учителя)"
@@ -29,6 +30,7 @@ def get_clients(request: HttpRequest):
     )
 
 
+@cache_page(timeout=60*15, key_prefix="schedule")
 @router.get("", response=ClientSchema, summary="Получение расписания")
 def get_schedule(
     request: HttpRequest,
@@ -48,3 +50,4 @@ def get_schedule(
         client_time = timezone.localdate()
 
     return get_schedule_for_client(client_name, client_time)
+

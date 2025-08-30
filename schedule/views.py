@@ -1,5 +1,6 @@
-# schedule_app/views.py
 from django.shortcuts import redirect, render
+
+from schedule.redis import clear_all_cache
 from .services import set_schedule
 from django import forms
 from django.shortcuts import render, redirect
@@ -39,6 +40,8 @@ def upload_and_parse_html(admin_instance):
                     "Расписание успешно загружено и сохранено.",
                     level="success",
                 )
+                
+                clear_all_cache()
 
                 if send_notifications:
                     admin_instance.message_user(

@@ -46,10 +46,7 @@ FROM base AS prod
 # Копируем код приложения
 COPY . .
 
-# Выполняем миграции и собираем статику
-RUN python manage.py makemigrations \
-    && python manage.py migrate \
-    && python manage.py collectstatic --noinput
+RUN poetry run python manage.py collectstatic --noinput
 
-# Запуск без --reload, с несколькими воркерами
-CMD ["uvicorn", "app.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+# Запуск — сначала миграции, потом uwsgi/uvicorn/gunicorn
+CMD ["sh", "-c", "poetry run python manage.py migrate && poetry run uvicorn app.asgi:application --host 0.0.0.0 --port 8000 --workers 2"]
