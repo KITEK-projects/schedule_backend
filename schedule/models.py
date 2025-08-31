@@ -27,12 +27,12 @@ class ScheduleDay(models.Model):
         return self.date.strftime("%d.%m.%Y")
     
     @property
-    def weekday(self) -> int:
+    def week_day(self) -> int:
         return self.date.weekday()
     
     @property
     def format_date(self) -> str:
-        return self.date.strftime("%d.%m.%y")
+        return self.date.strftime("%Y-%m-%d")
 
     class Meta:
         ordering = ["date"]

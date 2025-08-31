@@ -13,11 +13,12 @@ ENV PYTHONUNBUFFERED=1
 # Установка Poetry
 RUN pip install --no-cache-dir poetry
 
+
 # Рабочая директория
 WORKDIR /app
 
 # Копируем манифесты зависимостей
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml ./
 
 # Предварительно загружаем зависимости Poetry для кеша
 RUN poetry install --no-root --only main

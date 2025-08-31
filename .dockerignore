@@ -28,3 +28,6 @@ pgdata/
 # Docker files themselves (не обязательно)
 Dockerfile
 docker-compose.yml
+
+.venv
+.vscode

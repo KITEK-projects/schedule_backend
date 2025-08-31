@@ -81,6 +81,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://147.45.158.220",
     "http://147.45.158.220",
     "https://app.omsktec.ru",
+    "http://localhost"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -95,10 +96,6 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
     "x-client-time",
-]
-
-CORS_ALLOW_HEADERS = [
-    "X-CLIENT-TIME",
 ]
 
 ROOT_URLCONF = "app.urls"

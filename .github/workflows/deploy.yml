@@ -1,29 +1,35 @@
-name: 🚀 Deploy to Production
-
+name: Деплой
 on:
+  pull_request:
+    types:
+     - synchronized
+    branches:
+      - schedule-only
   push:
     branches:
-      - master
+     - schedule-only
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 🔑 Setup SSH agent
-        uses: webfactory/ssh-agent@v0.9.1
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: 🚀 Deploy via SSH
+      - name: Тащим ключик
         run: |
-          ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            echo "✈️ Pulling latest code..."
-            cd ~/schedule_backend/
+          echo "${{ secrets.SSH_KEY }}" > deploy_key.pem
+          chmod 600 deploy_key.pem
 
-            git pull
+      - name: Deploy to server via SSH
+        run: |
+          ssh -i deploy_key.pem -p ${{ secrets.PORT }} -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+            cd ~/schedule_backend
+            echo "🧠 Пулимся с гита..."
+            git checkout schedule-only
+            git pull origin schedule-only
 
-            docker compose down
-            docker compose up -d --build
+            echo "🔄 Роняем сервисы..."
+            docker compose --profile prod down
+            docker compose --profile prod up -d --build
 
-            echo "✅ Deployment finished."
+            echo "✅ Сервисы восстановлены. Изменения применены"
           EOF

@@ -1,6 +1,7 @@
 [project]
 name = "api"
 version = "0.1.0"
+package-mode = false
 description = "Backend for Приложение КИТЭКа"
 authors = [
     {name = "xaoriGit",email = "xaorinit@gmail.com"}

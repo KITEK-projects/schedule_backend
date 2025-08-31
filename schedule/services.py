@@ -36,7 +36,7 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
             continue
 
         date = scheduleDay.format_date
-        weekday = scheduleDay.weekday
+        week_day = scheduleDay.week_day
         lessons: List[LessonSchema] = []
 
         for lesson in scheduleDay.lessons.all():
@@ -50,7 +50,7 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
                     number=lesson.number,
                     time=schedule_bells.get_bell(
                         number=lesson.number,
-                        use_curator=True if weekday == 0 else False,
+                        use_curator=True if week_day == 0 else False,
                         client=(
                             lesson.partner if client.is_teacher else client.client_name
                         ),
@@ -72,14 +72,14 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
         data.schedules.append(
             ScheduleDaySchema(
                 date=date,
-                weekday=weekday,
+                week_day=week_day,
                 lessons=sorted(lessons, key=lambda x: x.number),
             )
         )
 
     if len(data.schedules) == 0:
         data.schedules.append(
-            ScheduleDaySchema(date=client_time.strftime("%d.%m.%y"), lessons=[])
+            ScheduleDaySchema(date=client_time.strftime("%Y-%m-%d"), week_day=client_time.weekday(), lessons=[])
         )
 
     return data

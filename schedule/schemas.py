@@ -22,7 +22,7 @@ class LessonSchema(Schema):
 
 class ScheduleDaySchema(Schema):
     date: str
-    weekday: int
+    week_day: int
     lessons: List[LessonSchema]
 
 
