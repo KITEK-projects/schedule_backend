@@ -79,7 +79,7 @@ services:
     container_name: web
     image: nginx
     volumes:
-      - ./web/kitek/dist/:/usr/share/nginx/html:ro
+      - ./web/dist/:/usr/share/nginx/html:ro
     ports:
       - "8080:80"
     environment:
@@ -90,5 +90,5 @@ services:
 networks:
   main:
     external: true
-    name: main
+    name: schedule
     driver: bridge
