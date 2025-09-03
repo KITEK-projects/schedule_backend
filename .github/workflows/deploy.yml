@@ -22,7 +22,7 @@ jobs:
         run: |
           ssh -i deploy_key.pem -p ${{ secrets.PORT }} -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} << 'EOF'
             set -e
-            cd ~/schedule_backend
+            cd /srv/schedule
             echo "🧠 Пулимся с гита..."
             git checkout schedule-only
             git pull origin schedule-only

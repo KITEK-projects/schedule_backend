@@ -132,7 +132,8 @@ class ScheduleBells:
     def __init__(self):
         self.params = TimeOfBell.objects.last()
         if not self.params:
-            self.lessons = ["Параметры не найдены"] * 6
+            self.bells = [["Параметры не найдены"]] * 6
+            self.bells_with_curator = [["Параметры не найдены"]] * 6
             return
         self.bells = [
             self._generate_schedule_bells(True, False),
