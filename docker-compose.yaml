@@ -2,16 +2,12 @@ services:
   redis:
     image: redis:alpine
     container_name: omsktec-redis
-    ports:
-      - "${REDIS_PORT}:6379"
     networks:
       - schedule
 
   postgres:
     image: postgres:latest
     container_name: omsktec-postgres
-    ports:
-      - "${POSTGRES_PORT}:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -50,6 +46,8 @@ services:
         source: ./
         target: /app
         read_only: ${READ_ONLY_CODE:-false}
+    networks:
+      - schedule
     profiles:
       - dev
 
