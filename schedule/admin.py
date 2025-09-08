@@ -13,12 +13,14 @@ class ClientAdmin(admin.ModelAdmin):
 
 
 class ScheduleDayAdmin(admin.ModelAdmin):
-    list_display = ("client", "date")
+    search_fields = ("client__client_name",)
+    list_display = ("id", "client", "date")
     list_filter = ("date", "client")
 
 
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ("schedule", "number", "title", "type", "partner", "location")
+    search_fields = ("schedule__client__client_name", "title")
+    list_display = ("schedule", "schedule__id", "schedule__client__client_name", "number", "title", "type", "partner", "location")
     list_filter = ("schedule", "number", "title", "type", "partner", "location")
 
 

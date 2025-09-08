@@ -1,5 +1,6 @@
 from datetime import datetime, date, timedelta
 from typing import List
+from django.db import transaction
 from schedule.models import Client, Lesson, ScheduleDay, ScheduleFile, TimeOfBell
 from schedule.parsers import html_parse
 from schedule.schemas import (
@@ -9,7 +10,6 @@ from schedule.schemas import (
     ScheduleDaySchema,
 )
 from schedule.notification import send_notifications
-from schedule.helpers import make_topic_name
 from ninja.errors import HttpError
 
 from schedule.urls import course_flag, format_lesson
@@ -79,20 +79,26 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
 
     if len(data.schedules) == 0:
         data.schedules.append(
-            ScheduleDaySchema(date=client_time.strftime("%Y-%m-%d"), week_day=client_time.weekday(), lessons=[])
+            ScheduleDaySchema(
+                date=client_time.strftime("%Y-%m-%d"),
+                week_day=client_time.weekday(),
+                lessons=[],
+            )
         )
 
     return data
 
 
+@transaction.atomic
 def set_schedule(content, uploaded_file, is_send_notifications: bool):
     clients = []
+
     parsed_data = html_parse(content)
+
     for item in parsed_data:
         client, _ = Client.objects.get_or_create(
             client_name=item["client_name"],
             is_teacher=item["is_teacher"],
-            ascii_name=make_topic_name(item["client_name"]),
         )
         clients.append(client)
         for schedule in item["schedules"]:
@@ -101,11 +107,10 @@ def set_schedule(content, uploaded_file, is_send_notifications: bool):
                 client=client,
             )
 
-            scheduleDay.lessons.all().delete()  # type: ignore
+            scheduleDay.lessons.all().delete()
 
-            lesson_to_create = []
-            for lesson in schedule["lessons"]:
-                lesson_to_create.append(
+            Lesson.objects.bulk_create(
+                [
                     Lesson(
                         schedule=scheduleDay,
                         number=lesson["number"],
@@ -114,8 +119,9 @@ def set_schedule(content, uploaded_file, is_send_notifications: bool):
                         partner=lesson["partner"],
                         location=lesson.get("location", ""),
                     )
-                )
-            Lesson.objects.bulk_create(lesson_to_create)
+                    for lesson in schedule["lessons"]
+                ]
+            )
 
         client.update_last_modified()
 

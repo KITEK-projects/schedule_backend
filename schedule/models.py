@@ -5,7 +5,6 @@ from django.utils.timezone import now
 
 class Client(models.Model):
     client_name = models.CharField(max_length=255, unique=True)
-    ascii_name = models.CharField(max_length=255, blank=True)
     is_teacher = models.BooleanField(default=False)
     last_update = models.DateTimeField(default=now)
 

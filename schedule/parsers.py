@@ -1,10 +1,7 @@
 from bs4 import BeautifulSoup
 
-
-data = []
-
-
-def parse_for_teacher(data, teacher_data=[]):
+def parse_for_teacher(data):
+    teacher_data=[]
     # Собираем все уникальные даты из всех клиентов
     all_dates = set()
     for data_item in data:
@@ -65,6 +62,8 @@ def parse_for_teacher(data, teacher_data=[]):
 
 
 def html_parse(src):
+    data = []
+
     soup = BeautifulSoup(src, "lxml")
 
     clients = soup.find_all("h2")
