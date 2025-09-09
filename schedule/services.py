@@ -1,6 +1,7 @@
 from datetime import datetime, date, timedelta
 from typing import List
 from django.db import transaction
+from django.utils.timezone import localtime
 from schedule.models import Client, Lesson, ScheduleDay, ScheduleFile, TimeOfBell
 from schedule.parsers import html_parse
 from schedule.schemas import (
@@ -21,13 +22,14 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
         client__client_name=client_name
     )
     client = Client.objects.filter(client_name=client_name).first()
+    last_update_local = localtime(client.last_update).strftime("%d.%m.%y, %H:%M")
 
     if client is None:
         raise HttpError(404, "Client not found")
 
     data = ClientSchema(
         client_name=client.client_name,
-        last_update=client.last_update.strftime("%d.%m.%y, %H:%M"),
+        last_update=last_update_local,
         schedules=[],
     )
 
