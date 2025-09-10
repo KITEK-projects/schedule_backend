@@ -22,10 +22,11 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
         client__client_name=client_name
     )
     client = Client.objects.filter(client_name=client_name).first()
-    last_update_local = localtime(client.last_update).strftime("%d.%m.%y, %H:%M")
 
     if client is None:
         raise HttpError(404, "Client not found")
+    
+    last_update_local = localtime(client.last_update).isoformat()
 
     data = ClientSchema(
         client_name=client.client_name,
