@@ -95,3 +95,9 @@ services:
     profiles:
       - prod
     restart: unless-stopped
+
+networks: 
+  schedule: 
+    external: true 
+    name: schedule 
+    driver: bridge
