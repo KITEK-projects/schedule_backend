@@ -4,6 +4,7 @@ services:
     container_name: omsktec-redis
     networks:
       - schedule
+    restart: unless-stopped
 
   postgres:
     image: postgres:latest
@@ -21,6 +22,7 @@ services:
       interval: 2s
       timeout: 1s
       retries: 5
+    restart: unless-stopped
 
   api-dev:
     container_name: omsktec-api
@@ -50,8 +52,8 @@ services:
       - schedule
     profiles:
       - dev
+    restart: unless-stopped
 
-  
   api:
     container_name: omsktec-api
     build:
@@ -76,6 +78,7 @@ services:
       - schedule
     profiles:
       - prod
+    restart: unless-stopped
 
   web:
     container_name: omsktec-web
@@ -91,9 +94,4 @@ services:
       - schedule
     profiles:
       - prod
-
-networks:
-  schedule:
-    external: true
-    name: schedule
-    driver: bridge
+    restart: unless-stopped
