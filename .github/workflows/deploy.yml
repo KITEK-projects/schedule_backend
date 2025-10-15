@@ -24,8 +24,8 @@ jobs:
             set -e
             cd /srv/schedule
             echo "🧠 Пулимся с гита..."
-            git checkout schedule-only
-            git pull origin schedule-only
+            git checkout main
+            git pull origin main
 
             echo "🔄 Роняем сервисы..."
             docker compose --profile prod down
