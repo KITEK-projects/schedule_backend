@@ -4,10 +4,10 @@ on:
     types:
      - synchronized
     branches:
-      - schedule-only
+      - main
   push:
     branches:
-     - schedule-only
+     - main
 
 jobs:
   deploy:
