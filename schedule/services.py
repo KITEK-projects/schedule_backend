@@ -53,7 +53,7 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
                     number=lesson.number,
                     time=schedule_bells.get_bell(
                         number=lesson.number,
-                        use_curator=True if week_day == 0 else False,
+                        week_day=week_day,
                         client=(
                             lesson.partner if client.is_teacher else client.client_name
                         ),
@@ -153,10 +153,13 @@ class ScheduleBells:
             self._generate_schedule_bells(False, True),
         ]
 
-    def get_bell(self, number: int, use_curator: bool, client: str):
+    def get_bell(self, number: int, week_day: int, client: str):
         flag = course_flag(client)
-        if use_curator and self.params.use_curator_hour:
+        if week_day == 0 and self.params.use_curator_hour:
             return self.bells_with_curator[flag][number - 1]
+        elif week_day == 5:
+            # Сокращенные пары в субботу
+            return self.bells[flag][number - 1]
         else:
             return self.bells[flag][number - 1]
 
