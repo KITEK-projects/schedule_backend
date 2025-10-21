@@ -11,10 +11,14 @@ class ScheduleBellsTest(TestCase):
         self.params = TimeOfBell.objects.create(
             start_time=time(8, 45),
             lesson=90,
+            lesson_saturday=70,
             use_curator_hour=True,
             curator_hour=40,
             lunch_break=30,
-            lunch_break_offset=5,
+            lunch_break_monday=35,
+            lunch_break_saturday=25,
+            first_half=40,
+            second_half=30,
             break_after_1=10,
             break_after_2=10,
             break_after_3=10,
@@ -64,4 +68,27 @@ class ScheduleBellsTest(TestCase):
                 "18:15-19:45",
             ],
         ]
-        self.assertEqual(schedule_bells.bells_with_curator, expected)
+        self.assertEqual(schedule_bells.bells_on_monday, expected)
+
+    def test_schedule_on_saturday(self):
+        schedule_bells = ScheduleBells()
+        expected = [
+            [
+                "08:45-09:55",
+                "10:05-10:45, 11:10-11:40",
+                "11:50-13:00",
+                "13:10-14:20",
+                "14:30-15:40",
+                "15:45-16:55",
+            ],
+            [
+                "08:45-09:55",
+                "10:05-11:15",
+                "11:50-13:00",
+                "13:10-14:20",
+                "14:30-15:40",
+                "15:45-16:55",
+            ],
+        ]
+        self.assertEqual(schedule_bells.bells_on_saturday, expected)
+        

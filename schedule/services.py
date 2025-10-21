@@ -25,7 +25,7 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
 
     if client is None:
         raise HttpError(404, "Client not found")
-    
+
     last_update_local = localtime(client.last_update).isoformat()
 
     data = ClientSchema(
@@ -142,50 +142,66 @@ class ScheduleBells:
         self.params = TimeOfBell.objects.last()
         if not self.params:
             self.bells = [["Параметры не найдены"]] * 6
-            self.bells_with_curator = [["Параметры не найдены"]] * 6
+            self.bells_on_monday = [["Параметры не найдены"]] * 6
+            self.bells_on_saturday = [["Параметры не найдены"]] * 6
             return
         self.bells = [
-            self._generate_schedule_bells(True, False),
-            self._generate_schedule_bells(False, False),
+            self._generate_schedule_bells(is_lower=True),
+            self._generate_schedule_bells(),
         ]
-        self.bells_with_curator = [
-            self._generate_schedule_bells(True, True),
-            self._generate_schedule_bells(False, True),
+        self.bells_on_monday = [
+            self._generate_schedule_bells(is_lower=True, is_monday=True),
+            self._generate_schedule_bells(is_monday=True),
+        ]
+        self.bells_on_saturday = [
+            self._generate_schedule_bells(is_lower=True, is_saturday=True),
+            self._generate_schedule_bells(is_saturday=True),
         ]
 
     def get_bell(self, number: int, week_day: int, client: str):
         flag = course_flag(client)
         if week_day == 0 and self.params.use_curator_hour:
-            return self.bells_with_curator[flag][number - 1]
+            return self.bells_on_monday[flag][number - 1]
         elif week_day == 5:
-            # Сокращенные пары в субботу
-            return self.bells[flag][number - 1]
+            return self.bells_on_saturday[flag][number - 1]
         else:
             return self.bells[flag][number - 1]
 
     def _generate_schedule_bells(
-        self, is_lower: bool = False, use_curator_hour: bool = False
+        self, is_lower: bool = False, is_monday: bool = False, is_saturday: bool = False
     ) -> List[str]:
         p = self.params
-        lesson = timedelta(minutes=p.lesson)
-        lunch_break = timedelta(minutes=p.lunch_break)
-        curator = timedelta(minutes=p.curator_hour if use_curator_hour else 0)
-        curator_offset = timedelta(
-            minutes=p.lunch_break_offset if use_curator_hour else 0
-        )
+        curator = timedelta(minutes=p.curator_hour if is_monday else 0)
+
+        if is_monday:
+            lesson = timedelta(minutes=p.lesson)
+            lunch_break = timedelta(minutes=p.lunch_break_monday)
+        elif is_saturday:
+            lesson = timedelta(minutes=p.lesson_saturday)
+            lunch_break = timedelta(minutes=p.lunch_break_saturday)
+        else:
+            lesson = timedelta(minutes=p.lesson)
+            lunch_break = timedelta(minutes=p.lunch_break)
 
         start = p.get_start_timedelta()
         end = start + lesson
         result = [format_lesson(start, end)]
 
         if is_lower:
-            half = lesson / 2
+            if is_saturday:
+                first_half = timedelta(minutes=p.first_half)
+                second_half = timedelta(minutes=p.second_half)
+            else:
+                first_half = lesson / 2
+                second_half = lesson / 2
+
+
             start = end + timedelta(minutes=p.break_after_1) + curator
-            end = start + half
+            end = start + first_half
             part1 = format_lesson(start, end)
 
-            start = end + lunch_break + curator_offset
-            end = start + half
+            start = end + lunch_break
+            end = start + second_half
             part2 = format_lesson(start, end)
 
             result.append(f"{part1}, {part2}")
@@ -193,7 +209,7 @@ class ScheduleBells:
             start = end + timedelta(minutes=p.break_after_1) + curator
             end = start + lesson
             result.append(format_lesson(start, end))
-            end += lunch_break + curator_offset
+            end += lunch_break
 
         last_end = end + timedelta(minutes=p.break_after_2)
 
