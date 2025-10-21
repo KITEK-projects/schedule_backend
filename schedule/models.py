@@ -64,12 +64,16 @@ class TimeOfBell(models.Model):
         help_text="Время начала первой пары"
     )
     lesson = models.PositiveIntegerField(default=90, help_text="Врема пары")
+    lesson_saturday = models.PositiveIntegerField(default=70, help_text="Врема пары в субботу")
     use_curator_hour = models.BooleanField(default=True, help_text="Включать кураторский час по понедельникам")
     curator_hour = models.PositiveIntegerField(default=40, help_text="Время кураторского часа")
 
     lunch_break = models.PositiveIntegerField(default=30, help_text="Время обеденного перерыва")
     lunch_break_monday = models.PositiveIntegerField(default=35, help_text="Смещение обеденного перерыва, по понедельникам")
-    lunch_break_saturday = models.PositiveIntegerField(default=25, help_text="Смещение обеденного перерыва, по по субботам")
+    lunch_break_saturday = models.PositiveIntegerField(default=25, help_text="Смещение обеденного перерыва, по субботам")
+
+    first_half = models.PositiveIntegerField(default=40, help_text="Время первой части пары")
+    second_half = models.PositiveIntegerField(default=30, help_text="Время второй части пары")
 
     break_after_1 = models.PositiveIntegerField(default=10, help_text="Перемена после первой пары")
     break_after_2 = models.PositiveIntegerField(default=10, help_text="Перемена после второй пары")
