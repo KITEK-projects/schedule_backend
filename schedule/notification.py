@@ -1,7 +1,7 @@
 from firebase_admin import messaging
 
 
-def send_notifications(clients):
+def send_notifications_by_clients(clients):
     messages = []
     for client in clients:
         msg = messaging.Message(
@@ -14,6 +14,27 @@ def send_notifications(clients):
         messages.append(msg)
     try:
         response = messaging.send_each(messages)
+    except Exception as e:
+        print(f"🔥 Ошибка при отправке уведомлений: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return None
+
+    return response
+
+
+def send_notification(title: str, body: str, topic: str):
+    msg = messaging.Message(
+        notification=messaging.Notification(
+            title=title,
+            body=body,
+        ),
+        topic=topic,
+    )
+
+    try:
+        response = messaging.send_each(msg)
     except Exception as e:
         print(f"🔥 Ошибка при отправке уведомлений: {e}")
         import traceback

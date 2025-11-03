@@ -1,5 +1,6 @@
 from django.shortcuts import redirect, render
 
+from schedule.notification import send_notification
 from schedule.redis import clear_all_cache
 from .services import set_schedule
 from django import forms
@@ -57,5 +58,47 @@ def upload_and_parse_html(admin_instance):
 
         form = UploadFileForm()
         return render(request, "admin/add.html", {"form": form})
+
+    return view
+
+
+def send_push_notification(admin_instance):
+    def view(request):
+        if request.method == "POST":
+            title = request.FILES.get("title")
+            body = request.POST.get("body")
+            topic = request.POST.get("topic")
+
+            if not title:
+                admin_instance.message_user(request, "Не указан заголовок", level="error")
+                return redirect(".")
+
+            if not body:
+                admin_instance.message_user(
+                    request, "Не указано тело пуша", level="error"
+                )
+                return redirect(".")
+
+            try:
+                res = send_notification(title, body, topic)
+
+                admin_instance.message_user(
+                    request,
+                    "Расписание успешно загружено и сохранено.",
+                    level="success",
+                )
+                
+                clear_all_cache()
+
+                if res:
+                    admin_instance.message_user(
+                        request, "📢 Уведомления отправлены.", level="info"
+                    )
+
+            except Exception as e:
+                admin_instance.message_user(request, f"Ошибка: {str(e)}", level="error")
+                return redirect(".")
+
+        return render(request, "admin/notification.html")
 
     return view

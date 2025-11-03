@@ -10,7 +10,7 @@ from schedule.schemas import (
     LessonSchema,
     ScheduleDaySchema,
 )
-from schedule.notification import send_notifications
+from schedule.notification import send_notifications_by_clients
 from ninja.errors import HttpError
 
 from schedule.urls import course_flag, format_lesson
@@ -129,7 +129,7 @@ def set_schedule(content, uploaded_file, is_send_notifications: bool):
         client.update_last_modified()
 
     if is_send_notifications:
-        send_notifications(clients)
+        send_notifications_by_clients(clients)
 
     ScheduleFile.objects.create(
         file_name=uploaded_file.name,

@@ -18,10 +18,11 @@ router = Router()
 def is_admin(user):
     return user.is_staff
 
-@cache_page(timeout=60*15, key_prefix="clients")
+
+@cache_page(timeout=60 * 15, key_prefix="clients")
 @router.get("/clients", response=ClientListSchema, summary="Получение клиентов")
 def get_clients(request: HttpRequest):
-    "Получение списка клиентов (группы и учителя)"
+    """Получение списка клиентов (группы и учителя)"""
     groups = Client.objects.filter(is_teacher=False)
     teachers = Client.objects.filter(is_teacher=True)
     return ClientListSchema(
@@ -30,12 +31,12 @@ def get_clients(request: HttpRequest):
     )
 
 
-@cache_page(timeout=60*15, key_prefix="schedule")
+@cache_page(timeout=60 * 15, key_prefix="schedule")
 @router.get("", response=ClientSchema, summary="Получение расписания")
 def get_schedule(
-    request: HttpRequest,
-    client_name: str,
-    x_client_time: Optional[str] = Header(default=None, alias="X-CLIENT-TIME"),
+        request: HttpRequest,
+        client_name: str,
+        x_client_time: Optional[str] = Header(default=None, alias="X-CLIENT-TIME"),
 ):
     "Получение списка расписания по клиенту и времени"
 
@@ -50,4 +51,3 @@ def get_schedule(
         client_time = timezone.localdate()
 
     return get_schedule_for_client(client_name, client_time)
-
