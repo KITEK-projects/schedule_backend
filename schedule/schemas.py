@@ -28,6 +28,7 @@ class ScheduleDaySchema(Schema):
 
 class ClientSchema(Schema):
     client_name: str
+    ascii_name: str
     last_update: str
     schedules: List[ScheduleDaySchema] = Field(default_factory=list)
 

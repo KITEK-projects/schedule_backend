@@ -4,7 +4,7 @@ from django.urls import path
 from admin_interface.models import Theme
 from admin_interface.admin import ThemeAdmin
 
-from schedule.views import upload_and_parse_html, send_push_notification
+from schedule.views import upload_and_parse_html
 
 
 class MyAdminSite(admin.AdminSite):
@@ -15,11 +15,6 @@ class MyAdminSite(admin.AdminSite):
                 "add/",
                 self.admin_view(upload_and_parse_html(self)),
                 name="add",
-            ),
-            path(
-                "notification/",
-                self.admin_view(send_push_notification(self)),
-                name="notification",
             ),
         ]
         return custom_urls + urls

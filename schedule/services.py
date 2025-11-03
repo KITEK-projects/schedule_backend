@@ -10,8 +10,9 @@ from schedule.schemas import (
     LessonSchema,
     ScheduleDaySchema,
 )
-from schedule.notification import send_notifications_by_clients
+from notification.notification import send_notifications_by_clients
 from ninja.errors import HttpError
+from unidecode import unidecode
 
 from schedule.urls import course_flag, format_lesson
 
@@ -30,6 +31,7 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
 
     data = ClientSchema(
         client_name=client.client_name,
+        ascii_name=client.ascii_name,
         last_update=last_update_local,
         schedules=[],
     )
@@ -101,6 +103,7 @@ def set_schedule(content, uploaded_file, is_send_notifications: bool):
     for item in parsed_data:
         client, _ = Client.objects.get_or_create(
             client_name=item["client_name"],
+            ascii_name=unidecode(item["client_name"]),
             is_teacher=item["is_teacher"],
         )
         clients.append(client)
@@ -129,7 +132,10 @@ def set_schedule(content, uploaded_file, is_send_notifications: bool):
         client.update_last_modified()
 
     if is_send_notifications:
-        send_notifications_by_clients(clients)
+        client_ids = [c.id for c in clients]
+        clients_with_tokens = Client.objects.filter(id__in=client_ids).prefetch_related("fcm_tokens")
+
+        send_notifications_by_clients(clients_with_tokens)
 
     ScheduleFile.objects.create(
         file_name=uploaded_file.name,

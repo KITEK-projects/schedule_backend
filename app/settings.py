@@ -49,6 +49,7 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     # Приложения проекта
     "schedule.apps.ScheduleConfig",
+    "notification.apps.NotificationConfig",
     "rustore.apps.RustoreConfig",
     "corsheaders",
     "ninja",
