@@ -15,8 +15,13 @@ def save_fcm_token(request, token: FCMSchema):
     if not client:
         raise HttpError(404, "Client not found")
 
-    FCMToken.objects.create(
-        token=token.fcm_token,
-        client=client,
-    )
+    fcm_token = FCMToken.objects.filter(token=token.fcm_token).first()
+    if fcm_token:
+        fcm_token.client = client
+        fcm_token.save()
+    else:
+        FCMToken.objects.create(
+            token=token.fcm_token,
+            client=client,
+        )
     return {"status": "ok"}
