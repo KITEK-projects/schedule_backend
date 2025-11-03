@@ -4,7 +4,7 @@ from schedule.models import Client
 
 
 class FCMToken(models.Model):
-    token = models.TextField()
+    token = models.TextField(unique=True)
     client = models.ForeignKey(
         Client,
         on_delete=models.CASCADE,
