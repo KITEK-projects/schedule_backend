@@ -75,14 +75,12 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django.middleware.common.CommonMiddleware",
 ]
-
 CSRF_TRUSTED_ORIGINS = [
     "https://147.45.158.220",
     "http://147.45.158.220",
     "https://app.omsktec.ru",
-    "http://localhost"
+    "http://localhost:8000"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
