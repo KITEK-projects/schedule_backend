@@ -103,7 +103,6 @@ def set_schedule(content, uploaded_file, is_send_notifications: bool):
     for item in parsed_data:
         client, _ = Client.objects.get_or_create(
             client_name=item["client_name"],
-            ascii_name=unidecode(item["client_name"]),
             is_teacher=item["is_teacher"],
         )
         clients.append(client)
