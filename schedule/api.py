@@ -14,10 +14,8 @@ from .schemas import ClientListSchema, ClientSchema
 
 router = Router()
 
-
 def is_admin(user):
     return user.is_staff
-
 
 @cache_page(timeout=60 * 15, key_prefix="clients")
 @router.get("/clients", response=ClientListSchema, summary="Получение клиентов")

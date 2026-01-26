@@ -1,8 +1,9 @@
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from typing import List
 from django.db import transaction
+from django.db.models import QuerySet
 from django.utils.timezone import localtime
-from schedule.models import Client, Lesson, ScheduleDay, ScheduleFile, TimeOfBell
+from schedule.models import Client, Lesson, ScheduleDay, ScheduleFile, Bell
 from schedule.parsers import html_parse
 from schedule.schemas import (
     ClientSchema,
@@ -12,14 +13,13 @@ from schedule.schemas import (
 )
 from notification.notification import send_notifications_by_clients
 from ninja.errors import HttpError
-from unidecode import unidecode
 
-from schedule.urls import course_flag, format_lesson
+from schedule.urls import is_lower_course
 
 
 def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema:
-    schedule_bells = ScheduleBells()
-    scheduleDays: List[ScheduleDay] = ScheduleDay.objects.filter(
+    schedule_bells = BellService()
+    scheduleDays: QuerySet[ScheduleDay] = ScheduleDay.objects.filter(
         client__client_name=client_name
     )
     client = Client.objects.filter(client_name=client_name).first()
@@ -52,10 +52,10 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
             if local_lesson is None:
                 local_lesson = LessonSchema(
                     number=lesson.number,
-                    time=schedule_bells.get_bell(
-                        number=lesson.number,
-                        week_day=week_day,
-                        client=(
+                    time=schedule_bells.get_bell_text(
+                        lesson_number=lesson.number,
+                        weekday=week_day,
+                        client_name=(
                             lesson.partner if client.is_teacher else client.client_name
                         ),
                     ),
@@ -141,85 +141,35 @@ def set_schedule(content, uploaded_file, is_send_notifications: bool):
     )
 
 
-class ScheduleBells:
-    def __init__(self):
-        self.params = TimeOfBell.objects.last()
-        if not self.params:
-            self.bells = [["Параметры не найдены"]] * 6
-            self.bells_on_monday = [["Параметры не найдены"]] * 6
-            self.bells_on_saturday = [["Параметры не найдены"]] * 6
-            return
-        self.bells = [
-            self._generate_schedule_bells(is_lower=True),
-            self._generate_schedule_bells(),
-        ]
-        self.bells_on_monday = [
-            self._generate_schedule_bells(is_lower=True, is_monday=True),
-            self._generate_schedule_bells(is_monday=True),
-        ]
-        self.bells_on_saturday = [
-            self._generate_schedule_bells(is_lower=True, is_saturday=True),
-            self._generate_schedule_bells(is_saturday=True),
-        ]
+class BellService:
+    @staticmethod
+    def get_schedule_code(weekday: int, is_lower_course: bool) -> str:
+        """
+        Определяет код расписания на основе входных данных.
+        Weekday: 0=Mon, ..., 5=Sat, 6=Sun
+        """
+        prefix = "lower" if is_lower_course else "upper"
 
-    def get_bell(self, number: int, week_day: int, client: str):
-        flag = course_flag(client)
-        if week_day == 0 and self.params.use_curator_hour:
-            return self.bells_on_monday[flag][number - 1]
-        elif week_day == 5:
-            return self.bells_on_saturday[flag][number - 1]
+        if weekday == 0:
+            suffix = "mon"
+        elif weekday == 5:
+            suffix = "sat"
         else:
-            return self.bells[flag][number - 1]
+            suffix = "std"
 
-    def _generate_schedule_bells(
-        self, is_lower: bool = False, is_monday: bool = False, is_saturday: bool = False
-    ) -> List[str]:
-        p = self.params
-        curator = timedelta(minutes=p.curator_hour if is_monday else 0)
+        return f"{prefix}_{suffix}"
 
-        if is_monday:
-            lesson = timedelta(minutes=p.lesson)
-            lunch_break = timedelta(minutes=p.lunch_break_monday)
-        elif is_saturday:
-            lesson = timedelta(minutes=p.lesson_saturday)
-            lunch_break = timedelta(minutes=p.lunch_break_saturday)
-        else:
-            lesson = timedelta(minutes=p.lesson)
-            lunch_break = timedelta(minutes=p.lunch_break)
+    @staticmethod
+    def get_bell_text(lesson_number: int, weekday: int, client_name: str) -> str:
+        is_lower = is_lower_course(client_name)
 
-        start = p.get_start_timedelta()
-        end = start + lesson
-        result = [format_lesson(start, end)]
+        code = BellService.get_schedule_code(weekday, is_lower)
 
-        if is_lower:
-            if is_saturday:
-                first_half = timedelta(minutes=p.first_half)
-                second_half = timedelta(minutes=p.second_half)
-            else:
-                first_half = lesson / 2
-                second_half = lesson / 2
-
-
-            start = end + timedelta(minutes=p.break_after_1) + curator
-            end = start + first_half
-            part1 = format_lesson(start, end)
-
-            start = end + lunch_break
-            end = start + second_half
-            part2 = format_lesson(start, end)
-
-            result.append(f"{part1}, {part2}")
-        else:
-            start = end + timedelta(minutes=p.break_after_1) + curator
-            end = start + lesson
-            result.append(format_lesson(start, end))
-            end += lunch_break
-
-        last_end = end + timedelta(minutes=p.break_after_2)
-
-        for i in range(3, 7):
-            start, end = last_end, last_end + lesson
-            result.append(format_lesson(start, end))
-            last_end = end + timedelta(minutes=getattr(p, f"break_after_{i}", 0))
-
-        return result
+        try:
+            bell = Bell.objects.get(
+                schedule_type__code=code,
+                lesson_number=lesson_number
+            )
+            return bell.display_text
+        except Bell.DoesNotExist:
+            return "Нет времени"

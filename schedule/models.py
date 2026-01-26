@@ -1,6 +1,3 @@
-from datetime import timedelta
-from typing import Any
-
 from django.db import models
 from django.utils.timezone import now
 
@@ -17,6 +14,10 @@ class Client(models.Model):
     def __str__(self):
         return self.client_name
 
+    class Meta:
+        verbose_name = "Клиент"
+        verbose_name_plural = "Клиенты"
+
 
 class ScheduleDay(models.Model):
     date = models.DateField()
@@ -26,11 +27,11 @@ class ScheduleDay(models.Model):
 
     def __str__(self):
         return self.date.strftime("%d.%m.%Y")
-    
+
     @property
     def week_day(self) -> int:
         return self.date.weekday()
-    
+
     @property
     def format_date(self) -> str:
         return self.date.strftime("%Y-%m-%d")
@@ -38,6 +39,8 @@ class ScheduleDay(models.Model):
     class Meta:
         ordering = ["date"]
         unique_together = ("client", "date")
+        verbose_name = "День расписания"
+        verbose_name_plural = "Дни расписания"
 
 
 class Lesson(models.Model):
@@ -52,6 +55,8 @@ class Lesson(models.Model):
 
     class Meta:
         ordering = ["title", "number"]
+        verbose_name = "Пара"
+        verbose_name_plural = "Пары"
 
 
 class ScheduleFile(models.Model):
@@ -59,34 +64,51 @@ class ScheduleFile(models.Model):
     created_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     schedule_file = models.FileField()
 
+    class Meta:
+        verbose_name = "Файл с расписанием"
+        verbose_name_plural = "Файлы с расписанием"
 
-class TimeOfBell(models.Model):
-    start_time = models.TimeField(
-        default="08:45",
-        help_text="Время начала первой пары"
+
+class ScheduleTimeType(models.Model):
+    """
+    Тип расписания. Например:
+    - '1-2 курс, Понедельник'
+    - '3-4 курс, Суббота'
+    """
+    code = models.SlugField(unique=True, help_text="Уникальный код, например 'lower_mon'")
+    name = models.CharField(max_length=100, help_text="Название для админки")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Расписание звонков"
+        verbose_name_plural = "Расписания звонков"
+
+
+class Bell(models.Model):
+    """
+    Конкретный звонок для конкретного типа расписания.
+    """
+    schedule_type = models.ForeignKey(
+        ScheduleTimeType,
+        on_delete=models.CASCADE,
+        related_name='bells'
     )
-    lesson = models.PositiveIntegerField(default=90, help_text="Врема пары")
-    lesson_saturday = models.PositiveIntegerField(default=70, help_text="Врема пары в субботу")
-    use_curator_hour = models.BooleanField(default=True, help_text="Включать кураторский час по понедельникам")
-    curator_hour = models.PositiveIntegerField(default=40, help_text="Время кураторского часа")
+    lesson_number = models.PositiveSmallIntegerField(verbose_name="№ пары",
+                                                     help_text="Номер пары (1-7)")
 
-    lunch_break = models.PositiveIntegerField(default=30, help_text="Время обеденного перерыва")
-    lunch_break_monday = models.PositiveIntegerField(default=35, help_text="Смещение обеденного перерыва, по понедельникам")
-    lunch_break_saturday = models.PositiveIntegerField(default=25, help_text="Смещение обеденного перерыва, по субботам")
+    display_text = models.CharField(
+        max_length=50,
+        help_text="Текст для вывода."
+    )
 
-    first_half = models.PositiveIntegerField(default=40, help_text="Время первой части пары")
-    second_half = models.PositiveIntegerField(default=30, help_text="Время второй части пары")
+    class Meta:
+        ordering = ['schedule_type', 'lesson_number']
+        unique_together = ('schedule_type', 'lesson_number')
+        verbose_name = "Звонки"
+        verbose_name_plural = "Звонки"
 
-    break_after_1 = models.PositiveIntegerField(default=10, help_text="Перемена после первой пары")
-    break_after_2 = models.PositiveIntegerField(default=10, help_text="Перемена после второй пары")
-    break_after_3 = models.PositiveIntegerField(default=10, help_text="Перемена после третьей пары")
-    break_after_4 = models.PositiveIntegerField(default=10, help_text="Перемена после четвертой пары")
-    break_after_5 = models.PositiveIntegerField(default=5, help_text="Перемена после пятой пары")
+    def __str__(self):
+        return self.display_text
 
-    def get_start_timedelta(self) -> timedelta:
-        """Переводит start_time в timedelta (удобно для расчётов)."""
-        return timedelta(
-            hours=self.start_time.hour,
-            minutes=self.start_time.minute
-        )
-    

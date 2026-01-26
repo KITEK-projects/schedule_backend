@@ -8,12 +8,12 @@ def format_lesson(start: timedelta, end: timedelta) -> str:
     )
 
 
-def course_flag(group: str) -> int:
+def is_lower_course(group: str) -> bool:
     """
-    Возвращает 0, если группа 1 или 2 курса,
-    1 — если 3 или 4 курс.
+    Возвращает True, если группа 1 или 2 курса,
+    False — если 3 или 4 курс.
     """
     for ch in group:
         if ch.isdigit():
-            return 0 if int(ch) in (1, 2) else 1
-    return 1
+            return True if int(ch) in (1, 2) else False
+    return False

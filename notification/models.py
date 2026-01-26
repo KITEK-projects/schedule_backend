@@ -15,3 +15,7 @@ class FCMToken(models.Model):
 
     def __str__(self):
         return f"{self.token} ({self.client.client_name})"
+
+    class Meta:
+        verbose_name = "Токен уведомлений"
+        verbose_name_plural = "Токены уведомлений"
