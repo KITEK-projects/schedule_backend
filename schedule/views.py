@@ -29,8 +29,8 @@ def upload_and_parse_html(admin_instance):
                 return redirect(".")
 
             try:
-                # content = uploaded_file.read().decode("windows-1251", errors="replace")
-                content = uploaded_file.read().decode("utf-8")
+                content = uploaded_file.read().decode("windows-1251", errors="replace")
+                # content = uploaded_file.read().decode("utf-8")
 
 
                 set_schedule(content, uploaded_file, send_notifications)
