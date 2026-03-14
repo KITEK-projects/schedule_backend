@@ -14,6 +14,9 @@ from datetime import timedelta
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+
 
 dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
 
@@ -44,6 +47,13 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    # Красивая админка
+    "unfold",
+    "unfold.contrib.filters",
+    "unfold.contrib.simple_history",
+    "unfold.contrib.forms",
+    "unfold.contrib.inlines",
+    "unfold.contrib.import_export",
     # Приложения проекта
     "schedule.apps.ScheduleConfig",
     "notification.apps.NotificationConfig",
@@ -51,9 +61,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "ninja",
     'import_export',
-    # Для красивой админки
-    "colorfield",
-    "admin_interface",
     # Django default apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -99,7 +106,9 @@ ROOT_URLCONF = "app.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            os.path.join(BASE_DIR, 'templates'),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -179,3 +188,126 @@ CACHES = {
         }
     }
 }
+
+
+UNFOLD = {
+    "SITE_TITLE": "Расписание КИТЭКа",
+    "SITE_HEADER": "Расписания КИТЭКа",
+    "SITE_SUBHEADER": "Административная панель",
+
+    "BORDER_RADIUS": "12px",
+    "COLORS": {
+        "base": {
+            "50":  "oklch(98.8% 0.003 254.6)",
+            "100": "oklch(97.1% 0.006 254.6)",
+            "200": "oklch(92.4% 0.009 254.1)",
+            "300": "oklch(86.5% 0.013 253.8)",
+            "400": "oklch(76.0% 0.018 255.4)",
+            "500": "oklch(60.0% 0.022 256.2)",
+            "600": "oklch(47.5% 0.022 255.8)",
+            "700": "oklch(37.5% 0.020 257.0)",
+            "800": "oklch(27.5% 0.018 258.0)",
+            "900": "oklch(20.5% 0.016 259.0)",
+            "950": "oklch(13.5% 0.013 260.0)",
+        },
+
+        "primary": {
+            "50":  "oklch(97.0% 0.014 254.6)",
+            "100": "oklch(93.2% 0.032 255.6)",
+            "200": "oklch(88.2% 0.059 254.1)",
+            "300": "oklch(80.9% 0.105 251.8)",
+            "400": "oklch(70.7% 0.165 254.6)",
+            "500": "oklch(57.2% 0.185 258.0)",
+            "600": "oklch(48.5% 0.175 261.5)",
+            "700": "oklch(40.1% 0.152 263.8)",
+            "800": "oklch(32.4% 0.115 265.2)",
+            "900": "oklch(25.8% 0.082 266.1)",
+            "950": "oklch(17.2% 0.053 268.0)",
+        },
+
+        "font": {
+            "subtle-light":    "var(--color-base-500)",
+            "subtle-dark":     "var(--color-base-400)",
+            "default-light":   "var(--color-base-600)",
+            "default-dark":    "var(--color-base-300)",
+            "important-light": "var(--color-base-900)",
+            "important-dark":  "var(--color-base-100)",
+        },
+    },
+
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+
+        "navigation": [
+            {
+                "title": _("Главное"),
+                "icon": "dashboard_customize",
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": _("Dashboard"),
+                        "icon": "analytics",
+                        "link": reverse_lazy("admin:index"),
+                        "badge_variant": "info",
+                        "badge_style": "solid",
+                        "permission": lambda request: request.user.is_staff,
+                    },
+                    {
+                        "title": _("Загрузить расписание"),
+                        "icon": "download",
+                        "link": "/api/admin/add/",
+                        "permission": lambda request: request.user.is_staff,
+                    },
+                ],
+            },
+            {
+                "title": _("Модели"),
+                "icon": "widgets",
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": _("Файлы"),
+                        "icon": "files",
+                        "link": reverse_lazy("admin:schedule_schedulefile_changelist"),
+                        "badge_variant": "info",
+                        "badge_style": "solid",
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                    {
+                        "title": _("Расписание звонков"),
+                        "icon": "timer",
+                        "link": reverse_lazy("admin:schedule_scheduletimetype_changelist"),
+                        "badge_variant": "info",
+                        "badge_style": "solid",
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                ],
+            },
+            {
+                "title": _("Админы"),
+                "icon": "admin_panel_settings",
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": _("Группы"),
+                        "icon": "group",
+                        "link": reverse_lazy("admin:auth_group_changelist"),
+                        "badge_variant": "info",
+                        "badge_style": "solid",
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                    {
+                        "title": _("Пользователи"),
+                        "icon": "supervised_user_circle",
+                        "link": reverse_lazy("admin:auth_user_changelist"),
+                        "badge_variant": "info",
+                        "badge_style": "solid",
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                ],
+            },
+        ],
+    }
+}
+

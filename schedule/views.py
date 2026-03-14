@@ -3,6 +3,7 @@ from .services import set_schedule
 from django import forms
 from django.shortcuts import render, redirect
 
+
 def upload_and_parse_html(admin_instance):
     def view(request):
         if request.method == "POST":
@@ -30,8 +31,6 @@ def upload_and_parse_html(admin_instance):
 
             try:
                 content = uploaded_file.read().decode("windows-1251", errors="replace")
-                # content = uploaded_file.read().decode("utf-8")
-
 
                 set_schedule(content, uploaded_file, send_notifications)
 
@@ -40,7 +39,7 @@ def upload_and_parse_html(admin_instance):
                     "Расписание успешно загружено и сохранено.",
                     level="success",
                 )
-                
+
                 clear_all_cache()
 
                 if send_notifications:

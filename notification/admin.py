@@ -4,9 +4,9 @@ from app.admin import admin_site
 from notification.models import FCMToken
 from notification.notification import send_notifications_by_clients
 from schedule.models import Client
+from unfold.admin import ModelAdmin
 
-
-class FCMTokenAdmin(admin.ModelAdmin):
+class FCMTokenAdmin(ModelAdmin):
     search_fields = ("client__client_name",)
     list_filter = ("client__client_name",)
     list_display = ("token", "client__client_name", "created_at", "last_used_at")

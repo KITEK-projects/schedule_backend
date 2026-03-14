@@ -1,35 +1,36 @@
-from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline
 from .models import Client, ScheduleDay, Lesson, ScheduleFile, ScheduleTimeType, Bell
 from app.admin import admin_site
 from import_export.admin import ImportExportModelAdmin
+from unfold.contrib.import_export.forms import ExportForm, ImportForm
 from import_export import resources
 
 
-class ClientAdmin(admin.ModelAdmin):
+class ClientAdmin(ModelAdmin):
     search_fields = ("client_name",)
     list_display = ("client_name", "is_teacher")
     list_filter = ("client_name", "is_teacher")
 
 
-class ScheduleDayAdmin(admin.ModelAdmin):
+class ScheduleDayAdmin(ModelAdmin):
     search_fields = ("client__client_name",)
     list_display = ("id", "client", "date")
     list_filter = ("date", "client")
 
 
-class LessonAdmin(admin.ModelAdmin):
+class LessonAdmin(ModelAdmin):
     search_fields = ("schedule__client__client_name", "title")
     list_display = ("schedule", "schedule__id", "schedule__client__client_name", "number", "title", "type", "partner",
                     "location")
     list_filter = ("schedule", "number", "title", "type", "partner", "location")
 
 
-class ScheduleFileAdmin(admin.ModelAdmin):
+class ScheduleFileAdmin(ModelAdmin):
     list_display = ("file_name", "created_at", "schedule_file")
     list_filter = ("file_name", "created_at")
 
 
-class BellInline(admin.TabularInline):
+class BellInline(TabularInline):
     model = Bell
     extra = 7
     max_num = 10
@@ -41,13 +42,17 @@ class BellResource(resources.ModelResource):
         model = Bell
 
 
-class ScheduleTimeTypeAdmin(ImportExportModelAdmin):
+class ScheduleTimeTypeAdmin(ModelAdmin, ImportExportModelAdmin):
+    import_form_class = ImportForm
+    export_form_class = ExportForm
     list_display = ("code", "name")
     list_filter = ("code", "name")
     inlines = [BellInline]
 
 
-class BellAdmin(ImportExportModelAdmin):
+class BellAdmin(ModelAdmin, ImportExportModelAdmin):
+    import_form_class = ImportForm
+    export_form_class = ExportForm
     list_display = ('schedule_type', 'lesson_number', 'display_text')
 
 

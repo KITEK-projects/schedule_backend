@@ -1,13 +1,16 @@
-from django.contrib import admin, messages
 from django.urls import path
-
-from admin_interface.models import Theme
-from admin_interface.admin import ThemeAdmin
+from unfold.admin import ModelAdmin
+from unfold.sites import UnfoldAdminSite
+from django.contrib import admin, messages
+from django.contrib.auth.models import User, Group
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
+from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
 from schedule.views import upload_and_parse_html
 
 
-class MyAdminSite(admin.AdminSite):
+class MyAdminSite(UnfoldAdminSite):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
@@ -20,7 +23,7 @@ class MyAdminSite(admin.AdminSite):
         return custom_urls + urls
 
     def message_user(
-        self, request, message, level="info", extra_tags="", fail_silently=False
+            self, request, message, level="info", extra_tags="", fail_silently=False
     ):
         """
         Send a message to the user. Default level is 'info'.
@@ -40,7 +43,19 @@ class MyAdminSite(admin.AdminSite):
 
 admin_site = MyAdminSite()
 
-try:
-    admin_site.register(Theme, ThemeAdmin)
-except:
+admin.site.unregister(User)
+admin.site.unregister(Group)
+
+
+class UserAdmin(BaseUserAdmin, ModelAdmin):
+    form = UserChangeForm
+    add_form = UserCreationForm
+    change_password_form = AdminPasswordChangeForm
+
+
+class GroupAdmin(BaseGroupAdmin, ModelAdmin):
     pass
+
+
+admin_site.register(User, UserAdmin)
+admin_site.register(Group, GroupAdmin)

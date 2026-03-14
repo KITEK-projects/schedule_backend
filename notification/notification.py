@@ -9,11 +9,6 @@ from schedule.models import Client
 
 
 BATCH_SIZE = 500  # ограничение FCM API
-INVALID_CODES = {
-    "registration-token-not-registered",
-    "invalid-argument",
-    "unregistered",
-}
 
 def send_notifications_by_clients(clients: QuerySet[Client]):
     messages = []
@@ -24,7 +19,7 @@ def send_notifications_by_clients(clients: QuerySet[Client]):
             messages.append(
                 messaging.Message(
                     notification=messaging.Notification(
-                        title=f"📅 Появилось новое расписание для {client.client_name}",
+                        title=f"📅 Новое расписание для {client.client_name}",
                         body="Посмотри его в приложении",
                     ),
                     token=token.token,
@@ -49,8 +44,7 @@ def _send_batch(messages: list[messaging.Message], token_map: list[str]):
         bad_tokens = []
         for i, resp in enumerate(response.responses):
             if not resp.success:
-                err = getattr(resp.exception, "code", None)
-                if err in INVALID_CODES:
+                if not resp.success:
                     bad_tokens.append(token_map[i])
 
         if bad_tokens:
