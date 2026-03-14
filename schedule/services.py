@@ -93,46 +93,79 @@ def get_schedule_for_client(client_name: str, client_time: date) -> ClientSchema
     return data
 
 
+def _lessons_snapshot(lessons_qs) -> set[tuple]:
+    """Снимок уроков в виде множества кортежей для сравнения."""
+    return {
+        (l.number, l.title, l.type, l.partner, l.location)
+        for l in lessons_qs
+    }
+
+
+def _build_new_snapshot(lessons: list[dict]) -> set[tuple]:
+    return {
+        (
+            l["number"],
+            l["title"],
+            l["type"],
+            l["partner"],
+            l.get("location", ""),
+        )
+        for l in lessons
+    }
+
+
 @transaction.atomic
 def set_schedule(content, uploaded_file, is_send_notifications: bool):
-    clients = []
-
     parsed_data = html_parse(content)
+    changed_clients: list[Client] = []
 
     for item in parsed_data:
         client, _ = Client.objects.get_or_create(
             client_name=item["client_name"],
             is_teacher=item["is_teacher"],
         )
-        clients.append(client)
+
+        client_changed = False
+
         for schedule in item["schedules"]:
-            scheduleDay, _ = ScheduleDay.objects.get_or_create(
-                date=datetime.fromisoformat(schedule["date"]).date(),
+            schedule_date = datetime.fromisoformat(schedule["date"]).date()
+            new_snapshot = _build_new_snapshot(schedule["lessons"])
+
+            schedule_day, created = ScheduleDay.objects.get_or_create(
+                date=schedule_date,
                 client=client,
             )
 
-            scheduleDay.lessons.all().delete()
+            if not created:
+                old_snapshot = _lessons_snapshot(schedule_day.lessons.all())
+                day_changed = old_snapshot != new_snapshot
+            else:
+                day_changed = bool(new_snapshot)
 
-            Lesson.objects.bulk_create(
-                [
+            if day_changed:
+                schedule_day.lessons.all().delete()
+                Lesson.objects.bulk_create([
                     Lesson(
-                        schedule=scheduleDay,
-                        number=lesson["number"],
-                        title=lesson["title"],
-                        type=lesson["type"],
-                        partner=lesson["partner"],
-                        location=lesson.get("location", ""),
+                        schedule=schedule_day,
+                        number=l["number"],
+                        title=l["title"],
+                        type=l["type"],
+                        partner=l["partner"],
+                        location=l.get("location", ""),
                     )
-                    for lesson in schedule["lessons"]
-                ]
-            )
+                    for l in schedule["lessons"]
+                ])
+                client_changed = True
 
-        client.update_last_modified()
+        if client_changed:
+            client.update_last_modified()
+            changed_clients.append(client)
 
-    if is_send_notifications:
-        client_ids = [c.id for c in clients]
-        clients_with_tokens = Client.objects.filter(id__in=client_ids).prefetch_related("fcm_tokens")
-
+    if is_send_notifications and changed_clients:
+        changed_ids = [c.id for c in changed_clients]
+        clients_with_tokens = Client.objects.filter(
+            id__in=changed_ids
+        ).prefetch_related("fcm_tokens")
         send_notifications_by_clients(clients_with_tokens)
 
     ScheduleFile.objects.create(
@@ -143,12 +176,12 @@ def set_schedule(content, uploaded_file, is_send_notifications: bool):
 
 class BellService:
     @staticmethod
-    def get_schedule_code(weekday: int, is_lower_course: bool) -> str:
+    def get_schedule_code(weekday: int, is_lower_course_weekday: bool) -> str:
         """
         Определяет код расписания на основе входных данных.
         Weekday: 0=Mon, ..., 5=Sat, 6=Sun
         """
-        prefix = "lower" if is_lower_course else "upper"
+        prefix = "lower" if is_lower_course_weekday else "upper"
 
         if weekday == 0:
             suffix = "mon"
