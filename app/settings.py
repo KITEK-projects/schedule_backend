@@ -192,7 +192,7 @@ CACHES = {
 
 UNFOLD = {
     "SITE_TITLE": "Расписание КИТЭКа",
-    "SITE_HEADER": "Расписания КИТЭКа",
+    "SITE_HEADER": "Расписание КИТЭКа",
     "SITE_SUBHEADER": "Административная панель",
 
     "BORDER_RADIUS": "12px",

@@ -55,6 +55,9 @@ def upload_and_parse_html(admin_instance):
             html_file = forms.FileField(label="Выберите HTML файл")
 
         form = UploadFileForm()
-        return render(request, "admin/add.html", {"form": form})
+        return render(request, "admin/schedule/add.html", {
+            **admin_instance.each_context(request),
+            "form": form,
+        })
 
     return view

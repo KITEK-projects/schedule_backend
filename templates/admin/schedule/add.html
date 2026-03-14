@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto py-8 px-4">
+<div class="max-w-xl py-8 px-4">
 
     <div class="mb-6">
         <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-1">
@@ -51,12 +51,13 @@
         </div>
 
         <!-- Checkbox -->
-        <div class="flex items-start gap-3">
+        <div class="flex items-start gap-3 my-6">
             <input type="checkbox"
                    name="send_notifications"
                    id="send_notifications"
                    checked
-                   class="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 cursor-pointer">
+                   class="mt-0.5 h-4 w-4 rounded border-base-300 dark:border-base-600 cursor-pointer"
+                   style="accent-color: var(--color-primary-600);">
             <label for="send_notifications" class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
                 Отправить push-уведомления о новом расписании
             </label>
