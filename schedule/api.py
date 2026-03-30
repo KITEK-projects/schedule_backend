@@ -21,8 +21,8 @@ def is_admin(user):
 @router.get("/clients", response=ClientListSchema, summary="Получение клиентов")
 def get_clients(request: HttpRequest):
     """Получение списка клиентов (группы и учителя)"""
-    groups = Client.objects.filter(is_teacher=False)
-    teachers = Client.objects.filter(is_teacher=True)
+    groups = Client.objects.filter(is_teacher=False).order_by("client_name")
+    teachers = Client.objects.filter(is_teacher=True).order_by("client_name")
     return ClientListSchema(
         groups=[group.client_name for group in groups],
         teachers=[teacher.client_name for teacher in teachers],
